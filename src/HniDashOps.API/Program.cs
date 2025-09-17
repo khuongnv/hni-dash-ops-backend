@@ -238,16 +238,14 @@ builder.Services.AddAuthorization(options =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+// Enable Swagger for both Development and Production
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "HniDashOps API v1");
-        c.RoutePrefix = "swagger";
-        c.DocumentTitle = "HniDashOps API Documentation";
-    });
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "HniDashOps API v1");
+    c.RoutePrefix = "swagger";
+    c.DocumentTitle = "HniDashOps API Documentation";
+});
 
 app.UseHttpsRedirection();
 
