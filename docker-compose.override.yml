@@ -1,0 +1,16 @@
+# Development overrides for docker-compose.yml
+version: '3.8'
+
+services:
+  api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://0.0.0.0:8080
+    volumes:
+      # Mount source code for hot reload (optional)
+      - ./src:/src
+    command: ["dotnet", "watch", "run", "--project", "/src/HniDashOps.API/HniDashOps.API.csproj", "--urls", "http://0.0.0.0:8080"]
+
+  postgres:
+    ports:
+      - "5432:5432"  # Expose PostgreSQL port for local development
