@@ -1,5 +1,10 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using HniDashOps.Infrastructure.Data;
+using HniDashOps.Core.Services;
+using HniDashOps.Infrastructure.Services;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
 
@@ -23,6 +28,31 @@ builder.Services.AddSwaggerGen(c =>
     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
     c.IncludeXmlComments(xmlPath);
+
+    // Add JWT Authentication to Swagger
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
 });
 
 // Database configuration - Supabase PostgreSQL
@@ -78,9 +108,132 @@ builder.Services.AddCors(options =>
 });
 
 // Add services
-// TODO: Add your services here
-// builder.Services.AddScoped<IAuthService, AuthService>();
-// builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddScoped<IPermissionService, PermissionService>();
+builder.Services.AddScoped<IDepartmentService, DepartmentService>();
+builder.Services.AddScoped<IMenuService, MenuService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<ISystemNotificationService, SystemNotificationService>();
+
+// JWT Authentication
+var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+var secretKey = jwtSettings["SecretKey"] ?? "YourSuperSecretKeyThatIsAtLeast32CharactersLong!";
+var issuer = jwtSettings["Issuer"] ?? "HniDashOps";
+var audience = jwtSettings["Audience"] ?? "HniDashOpsUsers";
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
+        ValidateIssuer = true,
+        ValidIssuer = issuer,
+        ValidateAudience = true,
+        ValidAudience = audience,
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero
+    };
+});
+
+builder.Services.AddAuthorization(options =>
+{
+    // Add custom authorization policies
+    options.AddPolicy("RequireUsersReadPermission", policy =>
+        policy.RequireClaim("Permission", "users.read"));
+    
+    options.AddPolicy("RequireUsersCreatePermission", policy =>
+        policy.RequireClaim("Permission", "users.create"));
+    
+    options.AddPolicy("RequireUsersUpdatePermission", policy =>
+        policy.RequireClaim("Permission", "users.update"));
+    
+    options.AddPolicy("RequireUsersDeletePermission", policy =>
+        policy.RequireClaim("Permission", "users.delete"));
+    
+    options.AddPolicy("RequireRolesReadPermission", policy =>
+        policy.RequireClaim("Permission", "roles.read"));
+    
+    options.AddPolicy("RequireRolesCreatePermission", policy =>
+        policy.RequireClaim("Permission", "roles.create"));
+    
+    options.AddPolicy("RequireRolesUpdatePermission", policy =>
+        policy.RequireClaim("Permission", "roles.update"));
+    
+    options.AddPolicy("RequireRolesDeletePermission", policy =>
+        policy.RequireClaim("Permission", "roles.delete"));
+    
+    options.AddPolicy("RequirePermissionsReadPermission", policy =>
+        policy.RequireClaim("Permission", "permissions.read"));
+    
+    options.AddPolicy("RequirePermissionsCreatePermission", policy =>
+        policy.RequireClaim("Permission", "permissions.create"));
+    
+    options.AddPolicy("RequirePermissionsUpdatePermission", policy =>
+        policy.RequireClaim("Permission", "permissions.update"));
+    
+    options.AddPolicy("RequirePermissionsDeletePermission", policy =>
+        policy.RequireClaim("Permission", "permissions.delete"));
+    
+    options.AddPolicy("RequireDepartmentsReadPermission", policy =>
+        policy.RequireClaim("Permission", "departments.read"));
+    
+    options.AddPolicy("RequireDepartmentsCreatePermission", policy =>
+        policy.RequireClaim("Permission", "departments.create"));
+    
+    options.AddPolicy("RequireDepartmentsUpdatePermission", policy =>
+        policy.RequireClaim("Permission", "departments.update"));
+    
+    options.AddPolicy("RequireDepartmentsDeletePermission", policy =>
+        policy.RequireClaim("Permission", "departments.delete"));
+    
+    options.AddPolicy("RequireMenusReadPermission", policy =>
+        policy.RequireClaim("Permission", "menus.read"));
+    
+    options.AddPolicy("RequireMenusCreatePermission", policy =>
+        policy.RequireClaim("Permission", "menus.create"));
+    
+    options.AddPolicy("RequireMenusUpdatePermission", policy =>
+        policy.RequireClaim("Permission", "menus.update"));
+    
+    options.AddPolicy("RequireMenusDeletePermission", policy =>
+        policy.RequireClaim("Permission", "menus.delete"));
+    
+    options.AddPolicy("RequireCategoriesReadPermission", policy =>
+        policy.RequireClaim("Permission", "categories.read"));
+    
+    options.AddPolicy("RequireCategoriesCreatePermission", policy =>
+        policy.RequireClaim("Permission", "categories.create"));
+    
+    options.AddPolicy("RequireCategoriesUpdatePermission", policy =>
+        policy.RequireClaim("Permission", "categories.update"));
+    
+    options.AddPolicy("RequireCategoriesDeletePermission", policy =>
+        policy.RequireClaim("Permission", "categories.delete"));
+
+    // SystemNotification policies
+    options.AddPolicy("RequireNotificationsReadPermission", policy =>
+        policy.RequireClaim("Permission", "notifications.read"));
+    
+    options.AddPolicy("RequireNotificationsCreatePermission", policy =>
+        policy.RequireClaim("Permission", "notifications.create"));
+    
+    options.AddPolicy("RequireNotificationsUpdatePermission", policy =>
+        policy.RequireClaim("Permission", "notifications.update"));
+    
+    options.AddPolicy("RequireNotificationsDeletePermission", policy =>
+        policy.RequireClaim("Permission", "notifications.delete"));
+    
+    options.AddPolicy("RequireSystemAdminPermission", policy =>
+        policy.RequireClaim("Permission", "system.admin"));
+});
 
 var app = builder.Build();
 
@@ -100,6 +253,7 @@ app.UseHttpsRedirection();
 
 app.UseCors("AllowNuxtApp");
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

@@ -1,51 +1,59 @@
 # HniDashOps Backend
 
-.NET Core 9 Web API với Clean Architecture cho hệ thống quản lý HniDashOps.
+.NET 9 Web API với Clean Architecture cho hệ thống quản lý HniDashOps.
 
 ## 🚀 Features
 
-- ✅ **Authentication & Authorization** (JWT + SSO)
+- ✅ **Authentication & Authorization** (JWT + Role-based)
 - ✅ **User Management** (CRUD operations)
-- ✅ **Menu Management** (Dynamic menu system)
-- ✅ **Categories & Departments** (Organization structure)
+- ✅ **Role & Permission Management** (RBAC system)
+- ✅ **Menu Management** (Hierarchical menu system)
+- ✅ **Categories Management** (Hierarchical categories)
+- ✅ **Departments Management** (Organizational structure)
 - ✅ **System Notifications** (Real-time notifications)
 - ✅ **Swagger Documentation** (Interactive API docs)
-- ✅ **PostgreSQL Database** (Railway managed)
-- ✅ **Redis Caching** (Session management)
-- ✅ **Railway Deployment** (Zero cost hosting)
+- ✅ **PostgreSQL Database** (Supabase managed)
+- ✅ **Entity Framework Core** (Code-first migrations)
+- ✅ **UPPER_CASE Database Naming** (Oracle compatibility)
 
 ## 📁 Project Structure
 
 ```
 HniDashOps-Backend/
 ├── src/
-│   ├── HniDashOps.API/           # Web API Controllers
-│   ├── HniDashOps.Core/          # Business Logic
+│   ├── HniDashOps.API/           # Web API Controllers & DTOs
+│   │   ├── Controllers/          # API Controllers
+│   │   ├── DTOs/                 # Data Transfer Objects
+│   │   └── Program.cs            # Application entry point
+│   ├── HniDashOps.Core/          # Business Logic & Entities
+│   │   ├── Entities/             # Domain entities
+│   │   └── Services/             # Service interfaces
 │   ├── HniDashOps.Infrastructure/ # Data Access Layer
-│   └── HniDashOps.Shared/        # Shared Models & DTOs
-├── tests/                        # Unit Tests
-├── scripts/                      # Setup & Deploy Scripts
+│   │   ├── Data/                 # DbContext & Seed data
+│   │   ├── Services/             # Service implementations
+│   │   └── Migrations/           # EF Core migrations
+│   └── HniDashOps.Shared/        # Shared models
+├── scripts/                      # Setup scripts
 ├── docs/                         # Documentation
-└── .vscode/                      # Cursor IDE Configuration
+└── HniDashOps.sln               # Solution file
 ```
 
 ## 🛠️ Prerequisites
 
 - **.NET 9 SDK** - [Download here](https://dotnet.microsoft.com/download/dotnet/9.0)
-- **PostgreSQL** (local or Railway managed)
-- **Redis** (for session management)
-- **Cursor IDE** với C# extensions
+- **PostgreSQL** (Supabase recommended)
+- **Visual Studio 2022** hoặc **VS Code** với C# extensions
 
 ## 🚀 Quick Start
 
 ### 1. Install .NET 9 SDK
 
 ```bash
-# macOS
-brew install dotnet
-
 # Windows
 winget install Microsoft.DotNet.SDK.9
+
+# macOS
+brew install dotnet
 
 # Linux
 wget https://packages.microsoft.com/config/ubuntu/22.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
@@ -59,13 +67,9 @@ sudo apt-get install -y dotnet-sdk-9.0
 ```bash
 # Clone repository
 git clone <repository-url>
-cd HniDashOps-Backend
+cd hni-dash-ops-backend
 
-# Run setup script
-chmod +x scripts/setup.sh
-./scripts/setup.sh
-
-# Install packages
+# Restore packages
 dotnet restore
 
 # Build solution
@@ -75,25 +79,51 @@ dotnet build
 dotnet run --project src/HniDashOps.API
 ```
 
-### 3. Access API
+### 3. Database Setup
 
-- **API Base URL**: `https://localhost:7000/api`
-- **Swagger UI**: `https://localhost:7000/swagger`
-- **Health Check**: `https://localhost:7000/health`
+```bash
+# Apply migrations
+dotnet ef database update --project src/HniDashOps.Infrastructure --startup-project src/HniDashOps.API
+
+# Seed initial data
+# Access: https://localhost:64706/api/seed/seed
+```
+
+### 4. Access API
+
+- **API Base URL**: `https://localhost:64706/api`
+- **Swagger UI**: `https://localhost:64706/swagger`
+- **Health Check**: `https://localhost:64706/health`
 
 ## 📚 API Documentation
 
 ### Authentication APIs
-- `POST /api/auth/login` - Traditional login
-- `POST /api/auth/sso` - SSO login
-- `POST /api/auth/check-user` - Check user exists
+- `POST /api/auth/login` - User login
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/change-password` - Change password
 
 ### User Management APIs
-- `GET /api/users` - Get users list (with pagination)
+- `GET /api/users` - Get users list
 - `POST /api/users` - Create new user
 - `GET /api/users/{id}` - Get user by ID
 - `PUT /api/users/{id}` - Update user
 - `DELETE /api/users/{id}` - Delete user
+- `POST /api/users/{id}/assign-role` - Assign role to user
+
+### Role Management APIs
+- `GET /api/roles` - Get roles list
+- `POST /api/roles` - Create new role
+- `GET /api/roles/{id}` - Get role by ID
+- `PUT /api/roles/{id}` - Update role
+- `DELETE /api/roles/{id}` - Delete role
+- `POST /api/roles/{id}/assign-permissions` - Assign permissions to role
+
+### Permission Management APIs
+- `GET /api/permissions` - Get permissions list
+- `POST /api/permissions` - Create new permission
+- `GET /api/permissions/{id}` - Get permission by ID
+- `PUT /api/permissions/{id}` - Update permission
+- `DELETE /api/permissions/{id}` - Delete permission
 
 ### Menu Management APIs
 - `GET /api/menus` - Get menus list
@@ -101,6 +131,8 @@ dotnet run --project src/HniDashOps.API
 - `GET /api/menus/{id}` - Get menu by ID
 - `PUT /api/menus/{id}` - Update menu
 - `DELETE /api/menus/{id}` - Delete menu
+- `GET /api/menus/hierarchy` - Get hierarchical menus
+- `POST /api/menus/reorder` - Reorder menus
 
 ### Categories APIs
 - `GET /api/categories` - Get categories list
@@ -108,6 +140,8 @@ dotnet run --project src/HniDashOps.API
 - `GET /api/categories/{id}` - Get category by ID
 - `PUT /api/categories/{id}` - Update category
 - `DELETE /api/categories/{id}` - Delete category
+- `GET /api/categories/hierarchy` - Get hierarchical categories
+- `POST /api/categories/reorder` - Reorder categories
 
 ### Departments APIs
 - `GET /api/departments` - Get departments list
@@ -115,106 +149,125 @@ dotnet run --project src/HniDashOps.API
 - `GET /api/departments/{id}` - Get department by ID
 - `PUT /api/departments/{id}` - Update department
 - `DELETE /api/departments/{id}` - Delete department
+- `GET /api/departments/hierarchy` - Get hierarchical departments
+- `POST /api/departments/{id}/assign-user` - Assign user to department
 
 ### System Notifications APIs
-- `GET /api/notifications` - Get notifications list
-- `POST /api/notifications` - Create new notification
-- `GET /api/notifications/{id}` - Get notification by ID
-- `PUT /api/notifications/{id}` - Update notification
-- `DELETE /api/notifications/{id}` - Delete notification
+- `GET /api/systemnotifications` - Get notifications list
+- `POST /api/systemnotifications` - Create new notification
+- `GET /api/systemnotifications/{id}` - Get notification by ID
+- `PUT /api/systemnotifications/{id}` - Update notification
+- `DELETE /api/systemnotifications/{id}` - Delete notification
+- `POST /api/systemnotifications/{id}/mark-read` - Mark as read
+- `GET /api/systemnotifications/active` - Get active notifications
+
+### Seed Data APIs
+- `POST /api/seed/seed` - Seed initial data (roles, permissions, users)
 
 ## 🗄️ Database Schema
 
-### Users Table
-```sql
-CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
-    username VARCHAR(50) UNIQUE NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    full_name VARCHAR(100) NOT NULL,
-    role VARCHAR(20) DEFAULT 'user',
-    is_active BOOLEAN DEFAULT true,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
+### Core Tables (UPPER_CASE naming)
 
-### Menus Table
-```sql
-CREATE TABLE menus (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    path VARCHAR(200) NOT NULL,
-    icon VARCHAR(50),
-    parent_id INTEGER REFERENCES menus(id),
-    order_index INTEGER DEFAULT 0,
-    is_active BOOLEAN DEFAULT true,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+- **USERS** - User accounts
+- **ROLES** - User roles
+- **PERMISSIONS** - System permissions
+- **USERROLES** - User-role assignments
+- **ROLEPERMISSIONS** - Role-permission assignments
+
+### Business Tables
+
+- **DEPARTMENTS** - Organizational departments
+- **MENUS** - System menu structure
+- **CATEGORIES** - Content categories
+- **SYSTEM_NOTIFICATIONS** - System notifications
+
+### Base Entity Fields
+
+All entities inherit from `BaseEntity`:
+- `ID` - Primary key
+- `ISACTIVE` - Active status
+- `CREATEDAT` - Creation timestamp
+- `UPDATEDAT` - Last update timestamp
+- `ISDELETED` - Soft delete flag
+
+## 🔧 Configuration
+
+### appsettings.json
+
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "your-postgresql-connection-string"
+  },
+  "JwtSettings": {
+    "SecretKey": "your-secret-key",
+    "Issuer": "HniDashOps",
+    "Audience": "HniDashOps-Users",
+    "ExpiryMinutes": 60
+  },
+  "Cors": {
+    "AllowedOrigins": ["https://localhost:3000"]
+  }
+}
 ```
 
 ## 🚀 Deployment
 
-### Railway Deployment
-
-1. **Connect GitHub Repository**
-2. **Add .NET Service**
-3. **Add PostgreSQL Service**
-4. **Configure Environment Variables**
-5. **Deploy**
-
-### Environment Variables
+### Local Development
 
 ```bash
-# Database
-DATABASE_URL=postgresql://username:password@host:port/database
-
-# Redis
-REDIS_URL=redis://username:password@host:port
-
-# JWT
-JWT_SECRET=your-super-secret-jwt-key
-
-# CORS
-CORS_ORIGINS=https://your-nuxt-app.vercel.app
+# Run with specific port
+dotnet run --project src/HniDashOps.API --urls="https://localhost:64706"
 ```
+
+### Production Deployment
+
+1. **Configure connection string**
+2. **Set JWT secret key**
+3. **Configure CORS origins**
+4. **Apply database migrations**
+5. **Seed initial data**
 
 ## 🧪 Testing
 
 ```bash
-# Run all tests
-dotnet test
+# Build solution
+dotnet build
 
-# Run specific test project
-dotnet test tests/HniDashOps.API.Tests
+# Run specific project
+dotnet run --project src/HniDashOps.API
 
-# Run with coverage
-dotnet test --collect:"XPlat Code Coverage"
+# Check database connection
+# Access: https://localhost:64706/api/seed/seed
 ```
+
+## 🔒 Security Features
+
+- **JWT Authentication** với role-based authorization
+- **Input Validation** với Data Annotations
+- **CORS** configuration
+- **HTTPS** enforced
+- **Password Hashing** với SHA256
+- **Soft Delete** pattern
 
 ## 📊 Performance
 
-- **Response Time**: < 100ms average
-- **Throughput**: 1000+ requests/second
-- **Memory Usage**: < 512MB
-- **Database**: PostgreSQL with connection pooling
-- **Caching**: Redis for session management
+- **Entity Framework Core** với connection pooling
+- **Async/Await** pattern throughout
+- **Pagination** support
+- **Hierarchical queries** optimized
+- **Indexed database** columns
 
-## 🔒 Security
+## 🗂️ DTOs Structure
 
-- **JWT Authentication** với HttpOnly cookies
-- **Input Validation** với FluentValidation
-- **Rate Limiting** để prevent abuse
-- **CORS** configuration cho frontend
-- **HTTPS** enforced in production
-
-## 📈 Monitoring
-
-- **Health Checks** endpoint
-- **Structured Logging** với Serilog
-- **Error Tracking** với custom middleware
-- **Performance Metrics** với built-in counters
+DTOs are organized by domain:
+- `UserDTOs.cs` - User-related DTOs
+- `RoleDTOs.cs` - Role-related DTOs
+- `PermissionDTOs.cs` - Permission-related DTOs
+- `DepartmentDTOs.cs` - Department-related DTOs
+- `MenuDTOs.cs` - Menu-related DTOs
+- `CategoryDTOs.cs` - Category-related DTOs
+- `SystemNotificationDTOs.cs` - Notification-related DTOs
 
 ## 🤝 Contributing
 
@@ -226,14 +279,13 @@ dotnet test --collect:"XPlat Code Coverage"
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License.
 
 ## 🆘 Support
 
 - **Documentation**: [docs/](docs/)
 - **Issues**: [GitHub Issues](https://github.com/your-repo/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-repo/discussions)
 
 ---
 
-**Built with ❤️ using .NET Core 9, PostgreSQL, and Railway**
+**Built with ❤️ using .NET 9, Entity Framework Core, PostgreSQL, and Clean Architecture**
