@@ -39,10 +39,10 @@ USER appuser
 
 # Set environment variables for Railway
 ENV ASPNETCORE_ENVIRONMENT=Production
-ENV ASPNETCORE_URLS=http://0.0.0.0:$PORT
+ENV ASPNETCORE_URLS=http://0.0.0.0:8080
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:$PORT/health || exit 1
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:8080/api/health || exit 1
 
 ENTRYPOINT ["dotnet", "HniDashOps.API.dll"]
