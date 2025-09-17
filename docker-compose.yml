@@ -30,7 +30,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://0.0.0.0:8080
-      - ConnectionStrings__DefaultConnection=Host=postgres;Database=hni_dash_ops;Username=postgres;Password=postgres123
+      - ConnectionStrings__DefaultConnection=Host=db.tpqraghvxywsoaxmfcfs.supabase.co;Database=postgres;Username=postgres;Password=hl1Bnh3otJBQTHys;Port=5432;SSL Mode=Require;Trust Server Certificate=true
       - JwtSettings__SecretKey=your-super-secret-jwt-key-for-development-only
       - JwtSettings__Issuer=HniDashOps
       - JwtSettings__Audience=HniDashOps-Users
@@ -44,7 +44,7 @@ services:
     networks:
       - hni-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
