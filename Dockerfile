@@ -53,6 +53,7 @@ ENV JwtSettings__ExpiryMinutes="60"
 # CORS Settings
 ENV Cors__AllowedOrigins__0="http://localhost:3000"
 ENV Cors__AllowedOrigins__1="https://hni-dash-ops-backend.up.railway.app"
+ENV Cors__AllowedOrigins__2="https://nuxt-hni-dash-ops.vercel.app"
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
