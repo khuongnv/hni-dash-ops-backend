@@ -16,6 +16,14 @@ namespace HniDashOps.Core.Services
         Task<AuthResult?> AuthenticateAsync(string usernameOrEmail, string password);
 
         /// <summary>
+        /// Demo authentication - authenticates user with username only (no password required)
+        /// WARNING: This method is for demonstration purposes only and should be removed in production
+        /// </summary>
+        /// <param name="username">Username</param>
+        /// <returns>Authentication result with user information</returns>
+        Task<AuthResult?> AuthenticateDemoAsync(string username);
+
+        /// <summary>
         /// Registers a new user
         /// </summary>
         /// <param name="username">Username</param>

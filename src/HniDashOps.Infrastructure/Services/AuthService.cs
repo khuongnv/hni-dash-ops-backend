@@ -95,6 +95,73 @@ namespace HniDashOps.Infrastructure.Services
             }
         }
 
+        public async Task<AuthResult?> AuthenticateDemoAsync(string username)
+        {
+            try
+            {
+                var user = await _context.Users
+                    .Include(u => u.UserRoles)
+                        .ThenInclude(ur => ur.Role)
+                            .ThenInclude(r => r.RolePermissions)
+                                .ThenInclude(rp => rp.Permission)
+                    .FirstOrDefaultAsync(u => 
+                        u.Username == username 
+                        && u.IsActive 
+                        && !u.IsDeleted);
+
+                if (user == null)
+                {
+                    _logger.LogWarning("Demo authentication failed for user: {Username}", username);
+                    return new AuthResult
+                    {
+                        Success = false,
+                        ErrorMessage = "User not found or inactive"
+                    };
+                }
+
+                // Update last login
+                user.LastLoginAt = DateTime.UtcNow;
+                user.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+
+                // Get user roles and permissions
+                var roles = user.UserRoles
+                    .Where(ur => ur.IsActive && !ur.IsDeleted)
+                    .Select(ur => ur.Role)
+                    .ToList();
+
+                var permissions = user.UserRoles
+                    .Where(ur => ur.IsActive && !ur.IsDeleted)
+                    .SelectMany(ur => ur.Role.RolePermissions)
+                    .Where(rp => rp.IsActive && !rp.IsDeleted)
+                    .Select(rp => rp.Permission)
+                    .Distinct()
+                    .ToList();
+
+                var token = GenerateJwtToken(user);
+
+                _logger.LogInformation("User {Username} authenticated successfully via demo login", user.Username);
+
+                return new AuthResult
+                {
+                    Success = true,
+                    Token = token,
+                    User = user,
+                    Roles = roles,
+                    Permissions = permissions
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred during demo authentication for user: {Username}", username);
+                return new AuthResult
+                {
+                    Success = false,
+                    ErrorMessage = "An error occurred during demo authentication"
+                };
+            }
+        }
+
         public async Task<RegistrationResult> RegisterAsync(string username, string email, string password, string? firstName = null, string? lastName = null, string? phoneNumber = null)
         {
             try

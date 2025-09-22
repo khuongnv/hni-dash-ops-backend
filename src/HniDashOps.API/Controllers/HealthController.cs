@@ -69,4 +69,67 @@ public class HealthController : ControllerBase
     {
         return Ok(new { Status = "Alive", Timestamp = DateTime.UtcNow });
     }
+
+    [HttpGet("database")]
+    public async Task<IActionResult> TestDatabase()
+    {
+        try
+        {
+            _logger.LogInformation("Testing database connection...");
+            
+            // Test basic connection
+            var canConnect = await _context.Database.CanConnectAsync();
+            
+            if (!canConnect)
+            {
+                _logger.LogError("Database connection failed - Cannot connect to database");
+                return StatusCode(503, new
+                {
+                    Status = "Unhealthy",
+                    Message = "Database connection failed",
+                    Timestamp = DateTime.UtcNow,
+                    Database = "Cannot connect to database",
+                    ConnectionString = _context.Database.GetConnectionString()
+                });
+            }
+
+            // Test query execution
+            var userCount = await _context.Users.CountAsync();
+            var roleCount = await _context.Roles.CountAsync();
+            var permissionCount = await _context.Permissions.CountAsync();
+
+            _logger.LogInformation("Database connection test successful");
+
+            return Ok(new
+            {
+                Status = "Healthy",
+                Message = "Database connection successful",
+                Timestamp = DateTime.UtcNow,
+                Database = new
+                {
+                    Connection = "Connected",
+                    Users = userCount,
+                    Roles = roleCount,
+                    Permissions = permissionCount,
+                    Provider = _context.Database.ProviderName
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Database connection test failed");
+            return StatusCode(503, new
+            {
+                Status = "Unhealthy",
+                Message = "Database connection test failed",
+                Timestamp = DateTime.UtcNow,
+                Database = new
+                {
+                    Connection = "Failed",
+                    Error = ex.Message,
+                    Provider = _context.Database.ProviderName
+                }
+            });
+        }
+    }
 }

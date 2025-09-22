@@ -37,12 +37,9 @@ COPY --from=publish /app/publish .
 RUN adduser --disabled-password --gecos '' appuser && chown -R appuser /app
 USER appuser
 
-# Set environment variables for Railway
+# Set environment variables
 ENV ASPNETCORE_ENVIRONMENT=Production
 ENV ASPNETCORE_URLS=http://0.0.0.0:8080
-
-# Database Connection
-ENV ConnectionStrings__DefaultConnection="Host=db.tpqraghvxywsoaxmfcfs.supabase.co;Database=postgres;Username=postgres;Password=hl1Bnh3otJBQTHys;Port=5432;SSL Mode=Require;Trust Server Certificate=true"
 
 # JWT Settings
 ENV JwtSettings__SecretKey="YourSuperSecretKeyThatIsAtLeast32CharactersLong!"
@@ -52,8 +49,7 @@ ENV JwtSettings__ExpiryMinutes="60"
 
 # CORS Settings
 ENV Cors__AllowedOrigins__0="http://localhost:3000"
-ENV Cors__AllowedOrigins__1="https://hni-dash-ops-backend.up.railway.app"
-ENV Cors__AllowedOrigins__2="https://nuxt-hni-dash-ops.vercel.app"
+ENV Cors__AllowedOrigins__1="http://localhost:3001"
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \

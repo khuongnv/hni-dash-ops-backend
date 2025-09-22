@@ -249,12 +249,18 @@ app.UseSwaggerUI(c =>
 
 app.UseHttpsRedirection();
 
+// Serve static files for frontend
+app.UseStaticFiles();
+
 app.UseCors("AllowNuxtApp");
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Fallback to index.html for SPA routing
+app.MapFallbackToFile("index.html");
 
 // Health check endpoint
 app.MapGet("/health", () => Results.Ok(new { 

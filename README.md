@@ -12,7 +12,7 @@
 - ✅ **Departments Management** (Organizational structure)
 - ✅ **System Notifications** (Real-time notifications)
 - ✅ **Swagger Documentation** (Interactive API docs)
-- ✅ **PostgreSQL Database** (Supabase managed)
+- ✅ **PostgreSQL Database** (Local development ready)
 - ✅ **Entity Framework Core** (Code-first migrations)
 - ✅ **UPPER_CASE Database Naming** (Oracle compatibility)
 

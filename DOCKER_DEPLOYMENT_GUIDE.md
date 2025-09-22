@@ -2,7 +2,7 @@
 
 ## 📋 Tổng Quan
 
-Project đã được containerized với Docker và sẵn sàng deploy lên Railway hoặc bất kỳ platform nào hỗ trợ Docker.
+Project đã được containerized với Docker và sẵn sàng deploy lên bất kỳ platform nào hỗ trợ Docker.
 
 ## 🗂️ Files Đã Tạo
 
@@ -11,11 +11,10 @@ Project đã được containerized với Docker và sẵn sàng deploy lên Rai
 - `.dockerignore` - Loại bỏ files không cần thiết
 - `docker-compose.yml` - Local development với PostgreSQL
 - `docker-compose.override.yml` - Development overrides
-- `railway.json` - Railway deployment configuration
 
 ### ✅ **Scripts**
 - `scripts/docker-build.sh` - Build Docker image
-- `scripts/docker-deploy.sh` - Deploy lên Railway
+- `scripts/docker-deploy.sh` - Deploy script
 
 ---
 
