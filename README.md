@@ -653,3 +653,20 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **HniDashOps Backend** - Built with ❤️ using .NET 9.0
+
+nuxt-hni-dash-ops/
+├── frontend/                 # Nuxt.js app (code hiện tại)
+│   ├── components/
+│   ├── composables/
+│   ├── pages/
+│   └── ...
+├── backend/                  # .NET Core API
+│   ├── Controllers/
+│   ├── Models/
+│   ├── Services/
+│   └── Program.cs
+├── shared/                   # Shared types/interfaces
+│   ├── types/
+│   └── contracts/
+├── docs/                     # Documentation
+└── scripts/                  # Build/deploy scripts
