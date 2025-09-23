@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using HniDashOps.Infrastructure.Data;
+using HniDashOps.Core.Authorization;
 using Microsoft.EntityFrameworkCore;
 
 namespace HniDashOps.API.Controllers
@@ -9,6 +11,7 @@ namespace HniDashOps.API.Controllers
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
+    [AuthorizeSuperAdmin]
     public class SeedController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -42,11 +45,13 @@ namespace HniDashOps.API.Controllers
                     Timestamp = DateTime.UtcNow,
                     Details = new
                     {
-                        Roles = await _context.Roles.CountAsync(),
-                        Permissions = await _context.Permissions.CountAsync(),
+                        Groups = await _context.Groups.CountAsync(),
                         Users = await _context.Users.CountAsync(),
-                        UserRoles = await _context.UserRoles.CountAsync(),
-                        RolePermissions = await _context.RolePermissions.CountAsync()
+                        GroupUsers = await _context.GroupUsers.CountAsync(),
+                        GroupMenus = await _context.GroupMenus.CountAsync(),
+                        Categories = await _context.Categories.CountAsync(),
+                        Menus = await _context.Menus.CountAsync(),
+                        Departments = await _context.Departments.CountAsync()
                     }
                 });
             }
@@ -74,11 +79,13 @@ namespace HniDashOps.API.Controllers
             {
                 var stats = new
                 {
-                    Roles = await _context.Roles.CountAsync(),
-                    Permissions = await _context.Permissions.CountAsync(),
+                    Groups = await _context.Groups.CountAsync(),
                     Users = await _context.Users.CountAsync(),
-                    UserRoles = await _context.UserRoles.CountAsync(),
-                    RolePermissions = await _context.RolePermissions.CountAsync(),
+                    GroupUsers = await _context.GroupUsers.CountAsync(),
+                    GroupMenus = await _context.GroupMenus.CountAsync(),
+                    Categories = await _context.Categories.CountAsync(),
+                    Menus = await _context.Menus.CountAsync(),
+                    Departments = await _context.Departments.CountAsync(),
                     Timestamp = DateTime.UtcNow
                 };
 
@@ -114,11 +121,10 @@ namespace HniDashOps.API.Controllers
                 _logger.LogWarning("Clearing all seed data from database...");
 
                 // Clear in correct order to respect foreign key constraints
-                _context.UserRoles.RemoveRange(_context.UserRoles);
-                _context.RolePermissions.RemoveRange(_context.RolePermissions);
+                _context.GroupUsers.RemoveRange(_context.GroupUsers);
+                _context.GroupMenus.RemoveRange(_context.GroupMenus);
                 _context.Users.RemoveRange(_context.Users);
-                _context.Permissions.RemoveRange(_context.Permissions);
-                _context.Roles.RemoveRange(_context.Roles);
+                _context.Groups.RemoveRange(_context.Groups);
 
                 await _context.SaveChangesAsync();
 

@@ -28,11 +28,11 @@ namespace HniDashOps.Core.Entities
         [MaxLength(200, ErrorMessage = "{0} quá dài")]
         public string Name { get; set; } = string.Empty;
 
-        [Column("PARENTID", Order = 3)]
+        [Column("PARENT_ID", Order = 3)]
         [Display(Name = "Phòng ban cha")]
         public int? ParentId { get; set; }
 
-        [Column("MAPID", Order = 4)]
+        [Column("MAP_ID", Order = 4)]
         [Display(Name = "Mã ánh xạ")]
         [StringLength(maximumLength: 100, MinimumLength = 2, ErrorMessage = "{0} cần có độ dài từ {2} đến {1} ký tự")]
         [MaxLength(100, ErrorMessage = "{0} quá dài")]

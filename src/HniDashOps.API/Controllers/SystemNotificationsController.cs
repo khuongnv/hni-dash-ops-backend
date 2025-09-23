@@ -3,13 +3,14 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using HniDashOps.Core.Entities;
 using HniDashOps.Core.Services;
+using HniDashOps.Core.Authorization;
 using HniDashOps.API.DTOs;
 
 namespace HniDashOps.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+    [AuthorizeSuperAdmin]
     public class SystemNotificationsController : ControllerBase
     {
         private readonly ISystemNotificationService _notificationService;
@@ -25,7 +26,6 @@ namespace HniDashOps.API.Controllers
         /// Lấy danh sách thông báo hệ thống
         /// </summary>
         [HttpGet]
-        [Authorize(Policy = "RequireNotificationsReadPermission")]
         public async Task<ActionResult<IEnumerable<SystemNotificationResponse>>> GetNotifications(
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 10,
@@ -48,7 +48,6 @@ namespace HniDashOps.API.Controllers
         /// Lấy thông báo theo ID
         /// </summary>
         [HttpGet("{id}")]
-        [Authorize(Policy = "RequireNotificationsReadPermission")]
         public async Task<ActionResult<SystemNotificationResponse>> GetNotification(int id)
         {
             try
@@ -72,7 +71,6 @@ namespace HniDashOps.API.Controllers
         /// Tạo thông báo mới
         /// </summary>
         [HttpPost]
-        [Authorize(Policy = "RequireNotificationsCreatePermission")]
         public async Task<ActionResult<SystemNotificationResponse>> CreateNotification([FromBody] CreateSystemNotificationRequest request)
         {
             try
@@ -118,7 +116,6 @@ namespace HniDashOps.API.Controllers
         /// Cập nhật thông báo
         /// </summary>
         [HttpPut("{id}")]
-        [Authorize(Policy = "RequireNotificationsUpdatePermission")]
         public async Task<ActionResult<SystemNotificationResponse>> UpdateNotification(int id, [FromBody] UpdateSystemNotificationRequest request)
         {
             try
@@ -167,7 +164,6 @@ namespace HniDashOps.API.Controllers
         /// Xóa thông báo
         /// </summary>
         [HttpDelete("{id}")]
-        [Authorize(Policy = "RequireNotificationsDeletePermission")]
         public async Task<ActionResult> DeleteNotification(int id)
         {
             try
@@ -191,7 +187,6 @@ namespace HniDashOps.API.Controllers
         /// Đánh dấu thông báo đã đọc
         /// </summary>
         [HttpPost("{id}/mark-read")]
-        [Authorize(Policy = "RequireNotificationsUpdatePermission")]
         public async Task<ActionResult> MarkAsRead(int id, [FromBody] MarkNotificationReadRequest request)
         {
             try
@@ -215,7 +210,6 @@ namespace HniDashOps.API.Controllers
         /// Đánh dấu thông báo chưa đọc
         /// </summary>
         [HttpPost("{id}/mark-unread")]
-        [Authorize(Policy = "RequireNotificationsUpdatePermission")]
         public async Task<ActionResult> MarkAsUnread(int id)
         {
             try
@@ -239,7 +233,6 @@ namespace HniDashOps.API.Controllers
         /// Lấy thông báo chưa đọc
         /// </summary>
         [HttpGet("unread/{userId}")]
-        [Authorize(Policy = "RequireNotificationsReadPermission")]
         public async Task<ActionResult<IEnumerable<SystemNotificationResponse>>> GetUnreadNotifications(int userId)
         {
             try
@@ -259,7 +252,6 @@ namespace HniDashOps.API.Controllers
         /// Lấy thông báo theo loại
         /// </summary>
         [HttpGet("by-type/{type}")]
-        [Authorize(Policy = "RequireNotificationsReadPermission")]
         public async Task<ActionResult<IEnumerable<SystemNotificationResponse>>> GetNotificationsByType(
             string type,
             [FromQuery] int page = 1,
@@ -282,7 +274,6 @@ namespace HniDashOps.API.Controllers
         /// Lấy thông báo theo trạng thái
         /// </summary>
         [HttpGet("by-status/{status}")]
-        [Authorize(Policy = "RequireNotificationsReadPermission")]
         public async Task<ActionResult<IEnumerable<SystemNotificationResponse>>> GetNotificationsByStatus(
             string status,
             [FromQuery] int page = 1,
@@ -305,7 +296,6 @@ namespace HniDashOps.API.Controllers
         /// Lấy thông báo đang hoạt động
         /// </summary>
         [HttpGet("active")]
-        [Authorize(Policy = "RequireNotificationsReadPermission")]
         public async Task<ActionResult<IEnumerable<SystemNotificationResponse>>> GetActiveNotifications()
         {
             try
@@ -325,7 +315,6 @@ namespace HniDashOps.API.Controllers
         /// Lấy thông báo theo khoảng thời gian
         /// </summary>
         [HttpGet("by-date-range")]
-        [Authorize(Policy = "RequireNotificationsReadPermission")]
         public async Task<ActionResult<IEnumerable<SystemNotificationResponse>>> GetNotificationsByDateRange(
             [FromQuery] DateTime startDate,
             [FromQuery] DateTime endDate)
@@ -347,7 +336,6 @@ namespace HniDashOps.API.Controllers
         /// Lấy thông báo ưu tiên cao
         /// </summary>
         [HttpGet("high-priority")]
-        [Authorize(Policy = "RequireNotificationsReadPermission")]
         public async Task<ActionResult<IEnumerable<SystemNotificationResponse>>> GetHighPriorityNotifications()
         {
             try
@@ -367,7 +355,6 @@ namespace HniDashOps.API.Controllers
         /// Cập nhật độ ưu tiên thông báo
         /// </summary>
         [HttpPut("{id}/priority")]
-        [Authorize(Policy = "RequireNotificationsUpdatePermission")]
         public async Task<ActionResult> UpdatePriority(int id, [FromBody] UpdateNotificationPriorityRequest request)
         {
             try
@@ -391,7 +378,6 @@ namespace HniDashOps.API.Controllers
         /// Lấy thông báo theo đối tượng
         /// </summary>
         [HttpGet("by-audience/{audience}")]
-        [Authorize(Policy = "RequireNotificationsReadPermission")]
         public async Task<ActionResult<IEnumerable<SystemNotificationResponse>>> GetNotificationsByAudience(
             string audience,
             [FromQuery] int page = 1,
@@ -414,7 +400,6 @@ namespace HniDashOps.API.Controllers
         /// Đánh dấu tất cả thông báo đã đọc
         /// </summary>
         [HttpPost("mark-all-read/{userId}")]
-        [Authorize(Policy = "RequireNotificationsUpdatePermission")]
         public async Task<ActionResult> MarkAllAsRead(int userId)
         {
             try
@@ -438,7 +423,6 @@ namespace HniDashOps.API.Controllers
         /// Xóa thông báo hết hạn
         /// </summary>
         [HttpDelete("expired")]
-        [Authorize(Policy = "RequireNotificationsDeletePermission")]
         public async Task<ActionResult> DeleteExpiredNotifications()
         {
             try
@@ -462,7 +446,6 @@ namespace HniDashOps.API.Controllers
         /// Lấy số lượng thông báo chưa đọc
         /// </summary>
         [HttpGet("unread-count/{userId}")]
-        [Authorize(Policy = "RequireNotificationsReadPermission")]
         public async Task<ActionResult<int>> GetUnreadCount(int userId)
         {
             try
@@ -481,7 +464,6 @@ namespace HniDashOps.API.Controllers
         /// Kiểm tra thông báo có đang hoạt động không
         /// </summary>
         [HttpGet("{id}/is-active")]
-        [Authorize(Policy = "RequireNotificationsReadPermission")]
         public async Task<ActionResult<bool>> IsNotificationActive(int id)
         {
             try

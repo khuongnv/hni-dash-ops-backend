@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using HniDashOps.Core.Services;
 using HniDashOps.Core.Entities;
+using HniDashOps.Core.Authorization;
 using HniDashOps.API.DTOs;
 using System.ComponentModel.DataAnnotations;
 
@@ -12,7 +13,7 @@ namespace HniDashOps.API.Controllers
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+    [AuthorizeSuperAdmin]
     public class MenusController : ControllerBase
     {
         private readonly IMenuService _menuService;
@@ -29,7 +30,6 @@ namespace HniDashOps.API.Controllers
         /// </summary>
         /// <returns>List of menus</returns>
         [HttpGet]
-        [Authorize(Policy = "RequireMenusReadPermission")]
         public async Task<IActionResult> GetMenus()
         {
             try
@@ -81,7 +81,6 @@ namespace HniDashOps.API.Controllers
         /// <param name="id">Menu ID</param>
         /// <returns>Menu details</returns>
         [HttpGet("{id}")]
-        [Authorize(Policy = "RequireMenusReadPermission")]
         public async Task<IActionResult> GetMenu(int id)
         {
             try
@@ -160,7 +159,6 @@ namespace HniDashOps.API.Controllers
         /// <param name="request">Menu creation request</param>
         /// <returns>Created menu</returns>
         [HttpPost]
-        [Authorize(Policy = "RequireMenusCreatePermission")]
         public async Task<IActionResult> CreateMenu([FromBody] CreateMenuRequest request)
         {
             try
@@ -236,7 +234,6 @@ namespace HniDashOps.API.Controllers
         /// <param name="request">Menu update request</param>
         /// <returns>Updated menu</returns>
         [HttpPut("{id}")]
-        [Authorize(Policy = "RequireMenusUpdatePermission")]
         public async Task<IActionResult> UpdateMenu(int id, [FromBody] UpdateMenuRequest request)
         {
             try
@@ -324,7 +321,6 @@ namespace HniDashOps.API.Controllers
         /// <param name="id">Menu ID</param>
         /// <returns>Deletion result</returns>
         [HttpDelete("{id}")]
-        [Authorize(Policy = "RequireMenusDeletePermission")]
         public async Task<IActionResult> DeleteMenu(int id)
         {
             try
@@ -377,7 +373,6 @@ namespace HniDashOps.API.Controllers
         /// </summary>
         /// <returns>List of root menus</returns>
         [HttpGet("root")]
-        [Authorize(Policy = "RequireMenusReadPermission")]
         public async Task<IActionResult> GetRootMenus()
         {
             try
@@ -446,7 +441,6 @@ namespace HniDashOps.API.Controllers
         /// <param name="parentId">Parent menu ID</param>
         /// <returns>List of child menus</returns>
         [HttpGet("parent/{parentId}/children")]
-        [Authorize(Policy = "RequireMenusReadPermission")]
         public async Task<IActionResult> GetChildMenus(int parentId)
         {
             try
@@ -497,7 +491,6 @@ namespace HniDashOps.API.Controllers
         /// <param name="id">Menu ID</param>
         /// <returns>Menu hierarchy</returns>
         [HttpGet("{id}/hierarchy")]
-        [Authorize(Policy = "RequireMenusReadPermission")]
         public async Task<IActionResult> GetMenuHierarchy(int id)
         {
             try
@@ -617,7 +610,6 @@ namespace HniDashOps.API.Controllers
         /// <param name="id">Menu ID</param>
         /// <returns>Breadcrumb path</returns>
         [HttpGet("{id}/breadcrumb")]
-        [Authorize(Policy = "RequireMenusReadPermission")]
         public async Task<IActionResult> GetBreadcrumb(int id)
         {
             try
@@ -668,7 +660,6 @@ namespace HniDashOps.API.Controllers
         /// <param name="request">Reorder request</param>
         /// <returns>Reorder result</returns>
         [HttpPost("reorder")]
-        [Authorize(Policy = "RequireMenusUpdatePermission")]
         public async Task<IActionResult> ReorderMenus([FromBody] ReorderMenusRequest request)
         {
             try
@@ -717,7 +708,6 @@ namespace HniDashOps.API.Controllers
         /// <param name="id">Menu ID</param>
         /// <returns>Move result</returns>
         [HttpPost("{id}/move-up")]
-        [Authorize(Policy = "RequireMenusUpdatePermission")]
         public async Task<IActionResult> MoveMenuUp(int id)
         {
             try
@@ -761,7 +751,6 @@ namespace HniDashOps.API.Controllers
         /// <param name="id">Menu ID</param>
         /// <returns>Move result</returns>
         [HttpPost("{id}/move-down")]
-        [Authorize(Policy = "RequireMenusUpdatePermission")]
         public async Task<IActionResult> MoveMenuDown(int id)
         {
             try
@@ -805,7 +794,6 @@ namespace HniDashOps.API.Controllers
         /// <param name="id">Menu ID</param>
         /// <returns>Toggle result</returns>
         [HttpPost("{id}/toggle-visibility")]
-        [Authorize(Policy = "RequireMenusUpdatePermission")]
         public async Task<IActionResult> ToggleMenuVisibility(int id)
         {
             try
@@ -849,7 +837,6 @@ namespace HniDashOps.API.Controllers
         /// <param name="searchTerm">Search term</param>
         /// <returns>Matching menus</returns>
         [HttpGet("search")]
-        [Authorize(Policy = "RequireMenusReadPermission")]
         public async Task<IActionResult> SearchMenus([FromQuery] string searchTerm)
         {
             try
@@ -902,7 +889,6 @@ namespace HniDashOps.API.Controllers
         /// <param name="level">Menu level</param>
         /// <returns>Menus at the specified level</returns>
         [HttpGet("by-level/{level}")]
-        [Authorize(Policy = "RequireMenusReadPermission")]
         public async Task<IActionResult> GetMenusByLevel(int level)
         {
             try

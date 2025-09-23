@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Http;
 using HniDashOps.Core.Entities;
 using HniDashOps.Core.Services;
 using HniDashOps.Infrastructure.Data;
@@ -11,12 +12,13 @@ namespace HniDashOps.Infrastructure.Services
     /// <summary>
     /// Implementation of user management services
     /// </summary>
-    public class UserService : IUserService
+    public class UserService : BaseService, IUserService
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<UserService> _logger;
 
-        public UserService(ApplicationDbContext context, ILogger<UserService> logger)
+        public UserService(ApplicationDbContext context, ILogger<UserService> logger, IHttpContextAccessor httpContextAccessor)
+            : base(httpContextAccessor)
         {
             _context = context;
             _logger = logger;
@@ -25,8 +27,8 @@ namespace HniDashOps.Infrastructure.Services
         public async Task<List<User>> GetAllUsersAsync()
         {
             return await _context.Users
-                .Include(u => u.UserRoles)
-                    .ThenInclude(ur => ur.Role)
+                .Include(u => u.GroupUsers)
+                    .ThenInclude(gu => gu.Group)
                 .Where(u => !u.IsDeleted)
                 .ToListAsync();
         }
@@ -34,28 +36,28 @@ namespace HniDashOps.Infrastructure.Services
         public async Task<User?> GetUserByIdAsync(int id)
         {
             return await _context.Users
-                .Include(u => u.UserRoles)
-                    .ThenInclude(ur => ur.Role)
+                .Include(u => u.GroupUsers)
+                    .ThenInclude(gu => gu.Group)
                 .FirstOrDefaultAsync(u => u.Id == id && !u.IsDeleted);
         }
 
         public async Task<User?> GetUserByUsernameAsync(string username)
         {
             return await _context.Users
-                .Include(u => u.UserRoles)
-                    .ThenInclude(ur => ur.Role)
+                .Include(u => u.GroupUsers)
+                    .ThenInclude(gu => gu.Group)
                 .FirstOrDefaultAsync(u => u.Username == username && !u.IsDeleted);
         }
 
         public async Task<User?> GetUserByEmailAsync(string email)
         {
             return await _context.Users
-                .Include(u => u.UserRoles)
-                    .ThenInclude(ur => ur.Role)
+                .Include(u => u.GroupUsers)
+                    .ThenInclude(gu => gu.Group)
                 .FirstOrDefaultAsync(u => u.Email == email && !u.IsDeleted);
         }
 
-        public async Task<User> CreateUserAsync(string username, string email, string password, string? firstName = null, string? lastName = null, string? phoneNumber = null, List<int>? roleIds = null)
+        public async Task<User> CreateUserAsync(string username, string email, string password, string? firstName = null, string? lastName = null, string? phoneNumber = null, UserRole? roleId = null)
         {
             var user = new User
             {
@@ -65,31 +67,16 @@ namespace HniDashOps.Infrastructure.Services
                 FirstName = firstName,
                 LastName = lastName,
                 PhoneNumber = phoneNumber,
+                RoleId = roleId ?? UserRole.Member, // Default to Member role
                 IsActive = true,
-                EmailConfirmed = false,
-                CreatedAt = DateTime.UtcNow
+                EmailConfirmed = false
             };
+
+            // Set audit fields for creation
+            SetCreatedAuditFields(user);
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
-
-            // Assign roles if provided
-            if (roleIds != null && roleIds.Any())
-            {
-                foreach (var roleId in roleIds)
-                {
-                    var userRole = new UserRole
-                    {
-                        UserId = user.Id,
-                        RoleId = roleId,
-                        AssignedAt = DateTime.UtcNow,
-                        IsActive = true,
-                        CreatedAt = DateTime.UtcNow
-                    };
-                    _context.UserRoles.Add(userRole);
-                }
-                await _context.SaveChangesAsync();
-            }
 
             _logger.LogInformation("User created: {Username} with ID: {UserId}", user.Username, user.Id);
 
@@ -110,13 +97,15 @@ namespace HniDashOps.Infrastructure.Services
             user.LastName = lastName;
             user.PhoneNumber = phoneNumber;
             user.IsActive = isActive;
-            user.UpdatedAt = DateTime.UtcNow;
 
             // Update password if provided
             if (!string.IsNullOrEmpty(password))
             {
                 user.PasswordHash = HashPassword(password);
             }
+
+            // Set audit fields for update
+            SetUpdatedAuditFields(user);
 
             await _context.SaveChangesAsync();
 
@@ -133,19 +122,17 @@ namespace HniDashOps.Infrastructure.Services
                 return false;
             }
 
-            // Soft delete
-            user.IsDeleted = true;
-            user.UpdatedAt = DateTime.UtcNow;
+            // Soft delete user
+            SetDeletedAuditFields(user);
 
-            // Also soft delete related user roles
-            var userRoles = await _context.UserRoles
-                .Where(ur => ur.UserId == id)
+            // Also soft delete related group users
+            var groupUsers = await _context.GroupUsers
+                .Where(gu => gu.UserId == id)
                 .ToListAsync();
 
-            foreach (var ur in userRoles)
+            foreach (var gu in groupUsers)
             {
-                ur.IsDeleted = true;
-                ur.UpdatedAt = DateTime.UtcNow;
+                SetDeletedAuditFields(gu);
             }
 
             await _context.SaveChangesAsync();
@@ -155,73 +142,22 @@ namespace HniDashOps.Infrastructure.Services
             return true;
         }
 
-        public async Task<bool> AssignRoleAsync(int userId, int roleId, DateTime? expiresAt = null)
+        public async Task<bool> UpdateUserRoleAsync(int userId, UserRole roleId)
         {
-            // Check if user exists
             var user = await _context.Users.FindAsync(userId);
             if (user == null || user.IsDeleted)
             {
                 return false;
             }
 
-            // Check if role exists
-            var role = await _context.Roles.FindAsync(roleId);
-            if (role == null || role.IsDeleted)
-            {
-                return false;
-            }
-
-            // Check if user already has this role
-            if (await _context.UserRoles.AnyAsync(ur => ur.UserId == userId && ur.RoleId == roleId && !ur.IsDeleted))
-            {
-                return false;
-            }
-
-            var userRole = new UserRole
-            {
-                UserId = userId,
-                RoleId = roleId,
-                AssignedAt = DateTime.UtcNow,
-                ExpiresAt = expiresAt,
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            _context.UserRoles.Add(userRole);
-            await _context.SaveChangesAsync();
-
-            _logger.LogInformation("Role {RoleId} assigned to user {UserId}", roleId, userId);
-
-            return true;
-        }
-
-        public async Task<bool> RemoveRoleAsync(int userId, int roleId)
-        {
-            var userRole = await _context.UserRoles
-                .FirstOrDefaultAsync(ur => ur.UserId == userId && ur.RoleId == roleId && !ur.IsDeleted);
-
-            if (userRole == null)
-            {
-                return false;
-            }
-
-            // Soft delete
-            userRole.IsDeleted = true;
-            userRole.UpdatedAt = DateTime.UtcNow;
+            user.RoleId = roleId;
+            user.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
 
-            _logger.LogInformation("Role {RoleId} removed from user {UserId}", roleId, userId);
+            _logger.LogInformation("Role {RoleId} updated for user {UserId}", roleId, userId);
 
             return true;
-        }
-
-        public async Task<List<UserRole>> GetUserRolesAsync(int userId)
-        {
-            return await _context.UserRoles
-                .Include(ur => ur.Role)
-                .Where(ur => ur.UserId == userId && ur.IsActive && !ur.IsDeleted)
-                .ToListAsync();
         }
 
         public async Task<bool> UsernameExistsAsync(string username, int? excludeUserId = null)

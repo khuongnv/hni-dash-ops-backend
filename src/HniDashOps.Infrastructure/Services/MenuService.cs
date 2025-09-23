@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Http;
 using HniDashOps.Core.Entities;
 using HniDashOps.Core.Services;
 using HniDashOps.Infrastructure.Data;
@@ -9,12 +10,13 @@ namespace HniDashOps.Infrastructure.Services
     /// <summary>
     /// Service implementation for Menu management
     /// </summary>
-    public class MenuService : IMenuService
+    public class MenuService : BaseService, IMenuService
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<MenuService> _logger;
 
-        public MenuService(ApplicationDbContext context, ILogger<MenuService> logger)
+        public MenuService(ApplicationDbContext context, ILogger<MenuService> logger, IHttpContextAccessor httpContextAccessor)
+            : base(httpContextAccessor)
         {
             _context = context;
             _logger = logger;
@@ -85,9 +87,11 @@ namespace HniDashOps.Infrastructure.Services
                     Target = target ?? "_self",
                     CssClass = cssClass,
                     DataAttributes = dataAttributes,
-                    IsActive = true,
-                    CreatedAt = DateTime.UtcNow
+                    IsActive = true
                 };
+
+                // Set audit fields for creation
+                SetCreatedAuditFields(menu);
 
                 _context.Menus.Add(menu);
                 await _context.SaveChangesAsync();
@@ -146,7 +150,9 @@ namespace HniDashOps.Infrastructure.Services
                 menu.Target = target ?? "_self";
                 menu.CssClass = cssClass;
                 menu.DataAttributes = dataAttributes;
-                menu.UpdatedAt = DateTime.UtcNow;
+
+                // Set audit fields for update
+                SetUpdatedAuditFields(menu);
 
                 await _context.SaveChangesAsync();
 
@@ -178,8 +184,7 @@ namespace HniDashOps.Infrastructure.Services
                 }
 
                 // Soft delete
-                menu.IsDeleted = true;
-                menu.UpdatedAt = DateTime.UtcNow;
+                SetDeletedAuditFields(menu);
 
                 await _context.SaveChangesAsync();
 

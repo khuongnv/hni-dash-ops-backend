@@ -1,41 +1,60 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-
 namespace HniDashOps.Core.Entities;
 
 /// <summary>
-/// Vai trò người dùng
+/// Enum định nghĩa các vai trò người dùng trong hệ thống
 /// </summary>
-[Table("USERROLES")]
-public partial class UserRole : BaseEntity
+public enum UserRole
 {
-    [Key]
-    [Column("ID", Order = 0)]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public int Id { get; set; }
+    /// <summary>
+    /// Super Administrator - Có toàn quyền truy cập hệ thống
+    /// </summary>
+    SuperAdmin = 1,
+    
+    /// <summary>
+    /// Sub Administrator - Có quyền quản trị hạn chế
+    /// </summary>
+    SubAdmin = 2,
+    
+    /// <summary>
+    /// Member - Thành viên thông thường
+    /// </summary>
+    Member = 3,
+    
+    /// <summary>
+    /// Guest - Khách truy cập với quyền hạn tối thiểu
+    /// </summary>
+    Guest = 4
+}
 
-    [Column("USERID", Order = 1)]
-    [Display(Name = "Người dùng")]
-    [Required(ErrorMessage = "{0} không được để trống")]
-    public int UserId { get; set; }
-
-    [Column("ROLEID", Order = 2)]
-    [Display(Name = "Vai trò")]
-    [Required(ErrorMessage = "{0} không được để trống")]
-    public int RoleId { get; set; }
-
-    [Column("ASSIGNEDAT", Order = 3)]
-    [Display(Name = "Ngày gán")]
-    public DateTime AssignedAt { get; set; } = DateTime.UtcNow;
-
-    [Column("EXPIRESAT", Order = 4)]
-    [Display(Name = "Ngày hết hạn")]
-    public DateTime? ExpiresAt { get; set; }
-
-    // Navigation properties
-    [ForeignKey("UserId")]
-    public virtual User User { get; set; } = null!;
-
-    [ForeignKey("RoleId")]
-    public virtual Role Role { get; set; } = null!;
+/// <summary>
+/// Extension methods cho UserRole enum
+/// </summary>
+public static class UserRoleExtensions
+{
+    /// <summary>
+    /// Kiểm tra xem role có phải là Admin không (SuperAdmin hoặc SubAdmin)
+    /// </summary>
+    public static bool IsAdmin(this UserRole role) => role <= UserRole.SubAdmin;
+    
+    /// <summary>
+    /// Kiểm tra xem role có phải là Member trở lên không
+    /// </summary>
+    public static bool IsMemberOrAbove(this UserRole role) => role <= UserRole.Member;
+    
+    /// <summary>
+    /// Kiểm tra xem role có phải là Guest không
+    /// </summary>
+    public static bool IsGuest(this UserRole role) => role == UserRole.Guest;
+    
+    /// <summary>
+    /// Lấy tên hiển thị của role
+    /// </summary>
+    public static string GetDisplayName(this UserRole role) => role switch
+    {
+        UserRole.SuperAdmin => "Super Administrator",
+        UserRole.SubAdmin => "Sub Administrator",
+        UserRole.Member => "Member",
+        UserRole.Guest => "Guest",
+        _ => "Unknown"
+    };
 }

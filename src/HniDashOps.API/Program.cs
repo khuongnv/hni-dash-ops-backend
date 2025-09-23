@@ -5,6 +5,7 @@ using System.Text;
 using HniDashOps.Infrastructure.Data;
 using HniDashOps.Core.Services;
 using HniDashOps.Infrastructure.Services;
+using HniDashOps.Infrastructure.Authorization;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
 
@@ -108,10 +109,10 @@ builder.Services.AddCors(options =>
 });
 
 // Add services
+builder.Services.AddMemoryCache();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IRoleService, RoleService>();
-builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IMenuService, MenuService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
@@ -143,97 +144,12 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.Services.AddAuthorization(options =>
-{
-    // Add custom authorization policies
-    options.AddPolicy("RequireUsersReadPermission", policy =>
-        policy.RequireClaim("Permission", "users.read"));
-    
-    options.AddPolicy("RequireUsersCreatePermission", policy =>
-        policy.RequireClaim("Permission", "users.create"));
-    
-    options.AddPolicy("RequireUsersUpdatePermission", policy =>
-        policy.RequireClaim("Permission", "users.update"));
-    
-    options.AddPolicy("RequireUsersDeletePermission", policy =>
-        policy.RequireClaim("Permission", "users.delete"));
-    
-    options.AddPolicy("RequireRolesReadPermission", policy =>
-        policy.RequireClaim("Permission", "roles.read"));
-    
-    options.AddPolicy("RequireRolesCreatePermission", policy =>
-        policy.RequireClaim("Permission", "roles.create"));
-    
-    options.AddPolicy("RequireRolesUpdatePermission", policy =>
-        policy.RequireClaim("Permission", "roles.update"));
-    
-    options.AddPolicy("RequireRolesDeletePermission", policy =>
-        policy.RequireClaim("Permission", "roles.delete"));
-    
-    options.AddPolicy("RequirePermissionsReadPermission", policy =>
-        policy.RequireClaim("Permission", "permissions.read"));
-    
-    options.AddPolicy("RequirePermissionsCreatePermission", policy =>
-        policy.RequireClaim("Permission", "permissions.create"));
-    
-    options.AddPolicy("RequirePermissionsUpdatePermission", policy =>
-        policy.RequireClaim("Permission", "permissions.update"));
-    
-    options.AddPolicy("RequirePermissionsDeletePermission", policy =>
-        policy.RequireClaim("Permission", "permissions.delete"));
-    
-    options.AddPolicy("RequireDepartmentsReadPermission", policy =>
-        policy.RequireClaim("Permission", "departments.read"));
-    
-    options.AddPolicy("RequireDepartmentsCreatePermission", policy =>
-        policy.RequireClaim("Permission", "departments.create"));
-    
-    options.AddPolicy("RequireDepartmentsUpdatePermission", policy =>
-        policy.RequireClaim("Permission", "departments.update"));
-    
-    options.AddPolicy("RequireDepartmentsDeletePermission", policy =>
-        policy.RequireClaim("Permission", "departments.delete"));
-    
-    options.AddPolicy("RequireMenusReadPermission", policy =>
-        policy.RequireClaim("Permission", "menus.read"));
-    
-    options.AddPolicy("RequireMenusCreatePermission", policy =>
-        policy.RequireClaim("Permission", "menus.create"));
-    
-    options.AddPolicy("RequireMenusUpdatePermission", policy =>
-        policy.RequireClaim("Permission", "menus.update"));
-    
-    options.AddPolicy("RequireMenusDeletePermission", policy =>
-        policy.RequireClaim("Permission", "menus.delete"));
-    
-    options.AddPolicy("RequireCategoriesReadPermission", policy =>
-        policy.RequireClaim("Permission", "categories.read"));
-    
-    options.AddPolicy("RequireCategoriesCreatePermission", policy =>
-        policy.RequireClaim("Permission", "categories.create"));
-    
-    options.AddPolicy("RequireCategoriesUpdatePermission", policy =>
-        policy.RequireClaim("Permission", "categories.update"));
-    
-    options.AddPolicy("RequireCategoriesDeletePermission", policy =>
-        policy.RequireClaim("Permission", "categories.delete"));
+// Simplified authorization configuration
+builder.Services.AddAuthorization();
 
-    // SystemNotification policies
-    options.AddPolicy("RequireNotificationsReadPermission", policy =>
-        policy.RequireClaim("Permission", "notifications.read"));
-    
-    options.AddPolicy("RequireNotificationsCreatePermission", policy =>
-        policy.RequireClaim("Permission", "notifications.create"));
-    
-    options.AddPolicy("RequireNotificationsUpdatePermission", policy =>
-        policy.RequireClaim("Permission", "notifications.update"));
-    
-    options.AddPolicy("RequireNotificationsDeletePermission", policy =>
-        policy.RequireClaim("Permission", "notifications.delete"));
-    
-    options.AddPolicy("RequireSystemAdminPermission", policy =>
-        policy.RequireClaim("Permission", "system.admin"));
-});
+// Register custom authorization handlers
+builder.Services.AddScoped<ResourceAuthorizationHandler>();
+builder.Services.AddScoped<RoleAuthorizationHandler>();
 
 var app = builder.Build();
 

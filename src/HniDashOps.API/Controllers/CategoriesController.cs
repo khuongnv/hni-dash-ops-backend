@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using HniDashOps.Core.Services;
 using HniDashOps.Core.Entities;
+using HniDashOps.Core.Authorization;
 using HniDashOps.API.DTOs;
 using System.ComponentModel.DataAnnotations;
 
@@ -12,7 +13,7 @@ namespace HniDashOps.API.Controllers
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+    [AuthorizeSuperAdmin]
     public class CategoriesController : ControllerBase
     {
         private readonly ICategoryService _categoryService;
@@ -29,7 +30,6 @@ namespace HniDashOps.API.Controllers
         /// </summary>
         /// <returns>List of categories</returns>
         [HttpGet]
-        [Authorize(Policy = "RequireCategoriesReadPermission")]
         public async Task<IActionResult> GetCategories()
         {
             try
@@ -83,7 +83,6 @@ namespace HniDashOps.API.Controllers
         /// <param name="id">Category ID</param>
         /// <returns>Category details</returns>
         [HttpGet("{id}")]
-        [Authorize(Policy = "RequireCategoriesReadPermission")]
         public async Task<IActionResult> GetCategory(int id)
         {
             try
@@ -165,7 +164,6 @@ namespace HniDashOps.API.Controllers
         /// <param name="code">Category code</param>
         /// <returns>Category details</returns>
         [HttpGet("by-code/{code}")]
-        [Authorize(Policy = "RequireCategoriesReadPermission")]
         public async Task<IActionResult> GetCategoryByCode(string code)
         {
             try
@@ -228,7 +226,6 @@ namespace HniDashOps.API.Controllers
         /// <param name="request">Category creation request</param>
         /// <returns>Created category</returns>
         [HttpPost]
-        [Authorize(Policy = "RequireCategoriesCreatePermission")]
         public async Task<IActionResult> CreateCategory([FromBody] CreateCategoryRequest request)
         {
             try
@@ -306,7 +303,6 @@ namespace HniDashOps.API.Controllers
         /// <param name="request">Category update request</param>
         /// <returns>Updated category</returns>
         [HttpPut("{id}")]
-        [Authorize(Policy = "RequireCategoriesUpdatePermission")]
         public async Task<IActionResult> UpdateCategory(int id, [FromBody] UpdateCategoryRequest request)
         {
             try
@@ -396,7 +392,6 @@ namespace HniDashOps.API.Controllers
         /// <param name="id">Category ID</param>
         /// <returns>Deletion result</returns>
         [HttpDelete("{id}")]
-        [Authorize(Policy = "RequireCategoriesDeletePermission")]
         public async Task<IActionResult> DeleteCategory(int id)
         {
             try
@@ -449,7 +444,6 @@ namespace HniDashOps.API.Controllers
         /// </summary>
         /// <returns>List of root categories</returns>
         [HttpGet("root")]
-        [Authorize(Policy = "RequireCategoriesReadPermission")]
         public async Task<IActionResult> GetRootCategories()
         {
             try
@@ -520,7 +514,6 @@ namespace HniDashOps.API.Controllers
         /// <param name="parentId">Parent category ID</param>
         /// <returns>List of child categories</returns>
         [HttpGet("parent/{parentId}/children")]
-        [Authorize(Policy = "RequireCategoriesReadPermission")]
         public async Task<IActionResult> GetChildCategories(int parentId)
         {
             try
@@ -572,7 +565,6 @@ namespace HniDashOps.API.Controllers
         /// <param name="id">Category ID</param>
         /// <returns>Category hierarchy</returns>
         [HttpGet("{id}/hierarchy")]
-        [Authorize(Policy = "RequireCategoriesReadPermission")]
         public async Task<IActionResult> GetCategoryHierarchy(int id)
         {
             try
@@ -695,7 +687,6 @@ namespace HniDashOps.API.Controllers
         /// <param name="id">Category ID</param>
         /// <returns>Category path</returns>
         [HttpGet("{id}/path")]
-        [Authorize(Policy = "RequireCategoriesReadPermission")]
         public async Task<IActionResult> GetCategoryPath(int id)
         {
             try
@@ -747,7 +738,6 @@ namespace HniDashOps.API.Controllers
         /// <param name="request">Reorder request</param>
         /// <returns>Reorder result</returns>
         [HttpPost("reorder")]
-        [Authorize(Policy = "RequireCategoriesUpdatePermission")]
         public async Task<IActionResult> ReorderCategories([FromBody] ReorderCategoriesRequest request)
         {
             try
@@ -796,7 +786,6 @@ namespace HniDashOps.API.Controllers
         /// <param name="id">Category ID</param>
         /// <returns>Move result</returns>
         [HttpPost("{id}/move-up")]
-        [Authorize(Policy = "RequireCategoriesUpdatePermission")]
         public async Task<IActionResult> MoveCategoryUp(int id)
         {
             try
@@ -840,7 +829,6 @@ namespace HniDashOps.API.Controllers
         /// <param name="id">Category ID</param>
         /// <returns>Move result</returns>
         [HttpPost("{id}/move-down")]
-        [Authorize(Policy = "RequireCategoriesUpdatePermission")]
         public async Task<IActionResult> MoveCategoryDown(int id)
         {
             try
@@ -884,7 +872,6 @@ namespace HniDashOps.API.Controllers
         /// <param name="id">Category ID</param>
         /// <returns>Toggle result</returns>
         [HttpPost("{id}/toggle-visibility")]
-        [Authorize(Policy = "RequireCategoriesUpdatePermission")]
         public async Task<IActionResult> ToggleCategoryVisibility(int id)
         {
             try
@@ -928,7 +915,6 @@ namespace HniDashOps.API.Controllers
         /// <param name="searchTerm">Search term</param>
         /// <returns>Matching categories</returns>
         [HttpGet("search")]
-        [Authorize(Policy = "RequireCategoriesReadPermission")]
         public async Task<IActionResult> SearchCategories([FromQuery] string searchTerm)
         {
             try
@@ -983,7 +969,6 @@ namespace HniDashOps.API.Controllers
         /// <param name="level">Category level</param>
         /// <returns>Categories at the specified level</returns>
         [HttpGet("by-level/{level}")]
-        [Authorize(Policy = "RequireCategoriesReadPermission")]
         public async Task<IActionResult> GetCategoriesByLevel(int level)
         {
             try
@@ -1038,7 +1023,6 @@ namespace HniDashOps.API.Controllers
         /// <param name="type">Category type</param>
         /// <returns>Categories of the specified type</returns>
         [HttpGet("by-type/{type}")]
-        [Authorize(Policy = "RequireCategoriesReadPermission")]
         public async Task<IActionResult> GetCategoriesByType(string type)
         {
             try
@@ -1093,7 +1077,6 @@ namespace HniDashOps.API.Controllers
         /// <param name="mapId">Map ID</param>
         /// <returns>Category details</returns>
         [HttpGet("by-map-id/{mapId}")]
-        [Authorize(Policy = "RequireCategoriesReadPermission")]
         public async Task<IActionResult> GetCategoryByMapId(string mapId)
         {
             try
@@ -1157,7 +1140,6 @@ namespace HniDashOps.API.Controllers
         /// <param name="excludeId">Category ID to exclude from check</param>
         /// <returns>Uniqueness result</returns>
         [HttpGet("check-code-unique")]
-        [Authorize(Policy = "RequireCategoriesReadPermission")]
         public async Task<IActionResult> CheckCodeUnique([FromQuery] string code, [FromQuery] int? excludeId = null)
         {
             try
@@ -1191,7 +1173,6 @@ namespace HniDashOps.API.Controllers
         /// <param name="excludeId">Category ID to exclude from check</param>
         /// <returns>Uniqueness result</returns>
         [HttpGet("check-map-id-unique")]
-        [Authorize(Policy = "RequireCategoriesReadPermission")]
         public async Task<IActionResult> CheckMapIdUnique([FromQuery] string mapId, [FromQuery] int? excludeId = null)
         {
             try

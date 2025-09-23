@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using HniDashOps.Core.Services;
 using HniDashOps.Core.Entities;
+using HniDashOps.Core.Authorization;
 using HniDashOps.API.DTOs;
 using System.ComponentModel.DataAnnotations;
 
@@ -12,7 +13,7 @@ namespace HniDashOps.API.Controllers
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+    [AuthorizeSuperAdmin]
     public class DepartmentsController : ControllerBase
     {
         private readonly IDepartmentService _departmentService;
@@ -29,7 +30,6 @@ namespace HniDashOps.API.Controllers
         /// </summary>
         /// <returns>List of departments</returns>
         [HttpGet]
-        [Authorize(Policy = "RequireDepartmentsReadPermission")]
         public async Task<IActionResult> GetDepartments()
         {
             try
@@ -77,7 +77,6 @@ namespace HniDashOps.API.Controllers
         /// <param name="id">Department ID</param>
         /// <returns>Department details</returns>
         [HttpGet("{id}")]
-        [Authorize(Policy = "RequireDepartmentsReadPermission")]
         public async Task<IActionResult> GetDepartment(int id)
         {
             try
@@ -147,7 +146,6 @@ namespace HniDashOps.API.Controllers
         /// <param name="code">Department code</param>
         /// <returns>Department details</returns>
         [HttpGet("by-code/{code}")]
-        [Authorize(Policy = "RequireDepartmentsReadPermission")]
         public async Task<IActionResult> GetDepartmentByCode(string code)
         {
             try
@@ -204,7 +202,6 @@ namespace HniDashOps.API.Controllers
         /// <param name="request">Department creation request</param>
         /// <returns>Created department</returns>
         [HttpPost]
-        [Authorize(Policy = "RequireDepartmentsCreatePermission")]
         public async Task<IActionResult> CreateDepartment([FromBody] CreateDepartmentRequest request)
         {
             try
@@ -270,7 +267,6 @@ namespace HniDashOps.API.Controllers
         /// <param name="request">Department update request</param>
         /// <returns>Updated department</returns>
         [HttpPut("{id}")]
-        [Authorize(Policy = "RequireDepartmentsUpdatePermission")]
         public async Task<IActionResult> UpdateDepartment(int id, [FromBody] UpdateDepartmentRequest request)
         {
             try
@@ -348,7 +344,6 @@ namespace HniDashOps.API.Controllers
         /// <param name="id">Department ID</param>
         /// <returns>Deletion result</returns>
         [HttpDelete("{id}")]
-        [Authorize(Policy = "RequireDepartmentsDeletePermission")]
         public async Task<IActionResult> DeleteDepartment(int id)
         {
             try
@@ -401,7 +396,6 @@ namespace HniDashOps.API.Controllers
         /// </summary>
         /// <returns>List of root departments</returns>
         [HttpGet("root")]
-        [Authorize(Policy = "RequireDepartmentsReadPermission")]
         public async Task<IActionResult> GetRootDepartments()
         {
             try
@@ -461,7 +455,6 @@ namespace HniDashOps.API.Controllers
         /// <param name="parentId">Parent department ID</param>
         /// <returns>List of child departments</returns>
         [HttpGet("parent/{parentId}/children")]
-        [Authorize(Policy = "RequireDepartmentsReadPermission")]
         public async Task<IActionResult> GetChildDepartments(int parentId)
         {
             try
@@ -508,7 +501,6 @@ namespace HniDashOps.API.Controllers
         /// <param name="id">Department ID</param>
         /// <returns>Department hierarchy</returns>
         [HttpGet("{id}/hierarchy")]
-        [Authorize(Policy = "RequireDepartmentsReadPermission")]
         public async Task<IActionResult> GetDepartmentHierarchy(int id)
         {
             try
@@ -556,7 +548,6 @@ namespace HniDashOps.API.Controllers
         /// <param name="id">Department ID</param>
         /// <returns>List of users in the department</returns>
         [HttpGet("{id}/users")]
-        [Authorize(Policy = "RequireDepartmentsReadPermission")]
         public async Task<IActionResult> GetDepartmentUsers(int id)
         {
             try
@@ -575,12 +566,7 @@ namespace HniDashOps.API.Controllers
                     EmailConfirmed = u.EmailConfirmed,
                     LastLoginAt = u.LastLoginAt,
                     CreatedAt = u.CreatedAt,
-                    Roles = u.UserRoles.Select(ur => new RoleResponse
-                    {
-                        Id = ur.Role.Id,
-                        Name = ur.Role.Name,
-                        Description = ur.Role.Description
-                    }).ToList()
+                    Role = u.RoleId.ToString()
                 }).ToList();
 
                 return Ok(new
@@ -609,7 +595,6 @@ namespace HniDashOps.API.Controllers
         /// <param name="request">Assignment request</param>
         /// <returns>Assignment result</returns>
         [HttpPost("assign-user")]
-        [Authorize(Policy = "RequireDepartmentsUpdatePermission")]
         public async Task<IActionResult> AssignUserToDepartment([FromBody] AssignUserToDepartmentRequest request)
         {
             try
@@ -658,7 +643,6 @@ namespace HniDashOps.API.Controllers
         /// <param name="userId">User ID</param>
         /// <returns>Removal result</returns>
         [HttpDelete("users/{userId}")]
-        [Authorize(Policy = "RequireDepartmentsUpdatePermission")]
         public async Task<IActionResult> RemoveUserFromDepartment(int userId)
         {
             try
@@ -702,7 +686,6 @@ namespace HniDashOps.API.Controllers
         /// <param name="searchTerm">Search term</param>
         /// <returns>Matching departments</returns>
         [HttpGet("search")]
-        [Authorize(Policy = "RequireDepartmentsReadPermission")]
         public async Task<IActionResult> SearchDepartments([FromQuery] string searchTerm)
         {
             try
@@ -751,7 +734,6 @@ namespace HniDashOps.API.Controllers
         /// <param name="level">Department level</param>
         /// <returns>Departments at the specified level</returns>
         [HttpGet("by-level/{level}")]
-        [Authorize(Policy = "RequireDepartmentsReadPermission")]
         public async Task<IActionResult> GetDepartmentsByLevel(int level)
         {
             try

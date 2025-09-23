@@ -1,17 +1,19 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Http;
 using HniDashOps.Core.Entities;
 using HniDashOps.Core.Services;
 using HniDashOps.Infrastructure.Data;
 
 namespace HniDashOps.Infrastructure.Services
 {
-    public class SystemNotificationService : ISystemNotificationService
+    public class SystemNotificationService : BaseService, ISystemNotificationService
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<SystemNotificationService> _logger;
 
-        public SystemNotificationService(ApplicationDbContext context, ILogger<SystemNotificationService> logger)
+        public SystemNotificationService(ApplicationDbContext context, ILogger<SystemNotificationService> logger, IHttpContextAccessor httpContextAccessor)
+            : base(httpContextAccessor)
         {
             _context = context;
             _logger = logger;
@@ -61,9 +63,11 @@ namespace HniDashOps.Infrastructure.Services
         {
             try
             {
-                notification.CreatedAt = DateTime.UtcNow;
                 notification.IsActive = true;
                 notification.IsDeleted = false;
+
+                // Set audit fields for creation
+                SetCreatedAuditFields(notification);
 
                 _context.SystemNotifications.Add(notification);
                 await _context.SaveChangesAsync();
@@ -102,7 +106,9 @@ namespace HniDashOps.Infrastructure.Services
                 existingNotification.ActionText = notification.ActionText;
                 existingNotification.Metadata = notification.Metadata;
                 existingNotification.IsActive = notification.IsActive;
-                existingNotification.UpdatedAt = DateTime.UtcNow;
+
+                // Set audit fields for update
+                SetUpdatedAuditFields(existingNotification);
 
                 await _context.SaveChangesAsync();
 
@@ -128,8 +134,8 @@ namespace HniDashOps.Infrastructure.Services
                     return false;
                 }
 
-                notification.IsDeleted = true;
-                notification.UpdatedAt = DateTime.UtcNow;
+                // Soft delete
+                SetDeletedAuditFields(notification);
 
                 await _context.SaveChangesAsync();
 

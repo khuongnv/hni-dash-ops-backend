@@ -95,8 +95,8 @@ public class HealthController : ControllerBase
 
             // Test query execution
             var userCount = await _context.Users.CountAsync();
-            var roleCount = await _context.Roles.CountAsync();
-            var permissionCount = await _context.Permissions.CountAsync();
+            var groupCount = await _context.Groups.CountAsync();
+            var menuCount = await _context.Menus.CountAsync();
 
             _logger.LogInformation("Database connection test successful");
 
@@ -109,8 +109,8 @@ public class HealthController : ControllerBase
                 {
                     Connection = "Connected",
                     Users = userCount,
-                    Roles = roleCount,
-                    Permissions = permissionCount,
+                    Groups = groupCount,
+                    Menus = menuCount,
                     Provider = _context.Database.ProviderName
                 }
             });

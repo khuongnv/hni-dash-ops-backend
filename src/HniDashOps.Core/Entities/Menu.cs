@@ -38,7 +38,7 @@ namespace HniDashOps.Core.Entities
         [Range(0, int.MaxValue, ErrorMessage = "{0} phải lớn hơn hoặc bằng 0")]
         public int Order { get; set; }
 
-        [Column("PARENTID", Order = 5)]
+        [Column("PARENT_ID", Order = 5)]
         [Display(Name = "Menu cha")]
         public int? ParentId { get; set; }
 
@@ -53,7 +53,7 @@ namespace HniDashOps.Core.Entities
         [MaxLength(500, ErrorMessage = "{0} quá dài")]
         public string? Description { get; set; }
 
-        [Column("ISVISIBLE", Order = 8)]
+        [Column("IS_VISIBLE", Order = 8)]
         [Display(Name = "Hiển thị")]
         public bool IsVisible { get; set; } = true;
 
@@ -63,13 +63,13 @@ namespace HniDashOps.Core.Entities
         [MaxLength(20, ErrorMessage = "{0} quá dài")]
         public string? Target { get; set; } = "_self";
 
-        [Column("CSSCLASS", Order = 10)]
+        [Column("CSS_CLASS", Order = 10)]
         [Display(Name = "CSS Class")]
         [StringLength(maximumLength: 200, ErrorMessage = "{0} quá dài")]
         [MaxLength(200, ErrorMessage = "{0} quá dài")]
         public string? CssClass { get; set; }
 
-        [Column("DATAATTRIBUTES", Order = 11)]
+        [Column("DATA_ATTRIBUTES", Order = 11)]
         [Display(Name = "Data Attributes")]
         [StringLength(maximumLength: 1000, ErrorMessage = "{0} quá dài")]
         [MaxLength(1000, ErrorMessage = "{0} quá dài")]
@@ -80,5 +80,8 @@ namespace HniDashOps.Core.Entities
         public virtual Menu? Parent { get; set; }
 
         public virtual ICollection<Menu> Children { get; set; } = new List<Menu>();
+        
+        // Navigation property cho Group-based authorization
+        public virtual ICollection<GroupMenu> GroupMenus { get; set; } = new List<GroupMenu>();
     }
 }

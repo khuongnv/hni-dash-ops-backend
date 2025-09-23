@@ -43,9 +43,9 @@ namespace HniDashOps.Core.Services
         /// <param name="firstName">First name</param>
         /// <param name="lastName">Last name</param>
         /// <param name="phoneNumber">Phone number</param>
-        /// <param name="roleIds">Role IDs to assign</param>
+        /// <param name="roleId">Role to assign</param>
         /// <returns>Created user</returns>
-        Task<User> CreateUserAsync(string username, string email, string password, string? firstName = null, string? lastName = null, string? phoneNumber = null, List<int>? roleIds = null);
+        Task<User> CreateUserAsync(string username, string email, string password, string? firstName = null, string? lastName = null, string? phoneNumber = null, UserRole? roleId = null);
 
         /// <summary>
         /// Updates an existing user
@@ -69,28 +69,12 @@ namespace HniDashOps.Core.Services
         Task<bool> DeleteUserAsync(int id);
 
         /// <summary>
-        /// Assigns a role to a user
+        /// Updates user role
         /// </summary>
         /// <param name="userId">User ID</param>
-        /// <param name="roleId">Role ID</param>
-        /// <param name="expiresAt">Expiration date (optional)</param>
-        /// <returns>True if assigned successfully</returns>
-        Task<bool> AssignRoleAsync(int userId, int roleId, DateTime? expiresAt = null);
-
-        /// <summary>
-        /// Removes a role from a user
-        /// </summary>
-        /// <param name="userId">User ID</param>
-        /// <param name="roleId">Role ID</param>
-        /// <returns>True if removed successfully</returns>
-        Task<bool> RemoveRoleAsync(int userId, int roleId);
-
-        /// <summary>
-        /// Gets user roles
-        /// </summary>
-        /// <param name="userId">User ID</param>
-        /// <returns>List of user roles</returns>
-        Task<List<UserRole>> GetUserRolesAsync(int userId);
+        /// <param name="roleId">New role</param>
+        /// <returns>True if updated successfully</returns>
+        Task<bool> UpdateUserRoleAsync(int userId, UserRole roleId);
 
         /// <summary>
         /// Checks if username exists

@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Http;
 using HniDashOps.Core.Entities;
 using HniDashOps.Core.Services;
 using HniDashOps.Infrastructure.Data;
@@ -15,13 +16,14 @@ namespace HniDashOps.Infrastructure.Services
     /// <summary>
     /// Implementation of authentication and authorization services
     /// </summary>
-    public class AuthService : IAuthService
+    public class AuthService : BaseService, IAuthService
     {
         private readonly ApplicationDbContext _context;
         private readonly IConfiguration _configuration;
         private readonly ILogger<AuthService> _logger;
 
-        public AuthService(ApplicationDbContext context, IConfiguration configuration, ILogger<AuthService> logger)
+        public AuthService(ApplicationDbContext context, IConfiguration configuration, ILogger<AuthService> logger, IHttpContextAccessor httpContextAccessor)
+            : base(httpContextAccessor)
         {
             _context = context;
             _configuration = configuration;
@@ -33,10 +35,10 @@ namespace HniDashOps.Infrastructure.Services
             try
             {
                 var user = await _context.Users
-                    .Include(u => u.UserRoles)
-                        .ThenInclude(ur => ur.Role)
-                            .ThenInclude(r => r.RolePermissions)
-                                .ThenInclude(rp => rp.Permission)
+                    .Include(u => u.GroupUsers)
+                        .ThenInclude(gu => gu.Group)
+                            .ThenInclude(g => g.GroupMenus)
+                                .ThenInclude(gm => gm.Menu)
                     .FirstOrDefaultAsync(u => 
                         (u.Username == usernameOrEmail || u.Email == usernameOrEmail) 
                         && u.IsActive 
@@ -57,20 +59,8 @@ namespace HniDashOps.Infrastructure.Services
                 user.UpdatedAt = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
 
-                // Get user roles and permissions
-                var roles = user.UserRoles
-                    .Where(ur => ur.IsActive && !ur.IsDeleted)
-                    .Select(ur => ur.Role)
-                    .ToList();
-
-                var permissions = user.UserRoles
-                    .Where(ur => ur.IsActive && !ur.IsDeleted)
-                    .SelectMany(ur => ur.Role.RolePermissions)
-                    .Where(rp => rp.IsActive && !rp.IsDeleted)
-                    .Select(rp => rp.Permission)
-                    .Distinct()
-                    .ToList();
-
+                // Get user menu access
+                var menuIds = await GetUserMenuIdsAsync(user.Id);
                 var token = GenerateJwtToken(user);
 
                 _logger.LogInformation("User {Username} authenticated successfully", user.Username);
@@ -80,8 +70,8 @@ namespace HniDashOps.Infrastructure.Services
                     Success = true,
                     Token = token,
                     User = user,
-                    Roles = roles,
-                    Permissions = permissions
+                    Role = user.RoleId,
+                    MenuIds = menuIds
                 };
             }
             catch (Exception ex)
@@ -100,10 +90,10 @@ namespace HniDashOps.Infrastructure.Services
             try
             {
                 var user = await _context.Users
-                    .Include(u => u.UserRoles)
-                        .ThenInclude(ur => ur.Role)
-                            .ThenInclude(r => r.RolePermissions)
-                                .ThenInclude(rp => rp.Permission)
+                    .Include(u => u.GroupUsers)
+                        .ThenInclude(gu => gu.Group)
+                            .ThenInclude(g => g.GroupMenus)
+                                .ThenInclude(gm => gm.Menu)
                     .FirstOrDefaultAsync(u => 
                         u.Username == username 
                         && u.IsActive 
@@ -124,19 +114,8 @@ namespace HniDashOps.Infrastructure.Services
                 user.UpdatedAt = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
 
-                // Get user roles and permissions
-                var roles = user.UserRoles
-                    .Where(ur => ur.IsActive && !ur.IsDeleted)
-                    .Select(ur => ur.Role)
-                    .ToList();
-
-                var permissions = user.UserRoles
-                    .Where(ur => ur.IsActive && !ur.IsDeleted)
-                    .SelectMany(ur => ur.Role.RolePermissions)
-                    .Where(rp => rp.IsActive && !rp.IsDeleted)
-                    .Select(rp => rp.Permission)
-                    .Distinct()
-                    .ToList();
+                // Get user menu IDs
+                var menuIds = await GetUserMenuIdsAsync(user.Id);
 
                 var token = GenerateJwtToken(user);
 
@@ -147,8 +126,8 @@ namespace HniDashOps.Infrastructure.Services
                     Success = true,
                     Token = token,
                     User = user,
-                    Roles = roles,
-                    Permissions = permissions
+                    Role = user.RoleId,
+                    MenuIds = menuIds
                 };
             }
             catch (Exception ex)
@@ -196,29 +175,15 @@ namespace HniDashOps.Infrastructure.Services
                     LastName = lastName,
                     PhoneNumber = phoneNumber,
                     EmailConfirmed = false,
-                    IsActive = true,
-                    CreatedAt = DateTime.UtcNow
+                    RoleId = UserRole.Member, // Default role is Member
+                    IsActive = true
                 };
+
+                // Set audit fields for creation
+                SetCreatedAuditFields(user);
 
                 _context.Users.Add(user);
                 await _context.SaveChangesAsync();
-
-                // Assign default role (User)
-                var defaultRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "User");
-                if (defaultRole != null)
-                {
-                    var userRole = new UserRole
-                    {
-                        UserId = user.Id,
-                        RoleId = defaultRole.Id,
-                        AssignedAt = DateTime.UtcNow,
-                        IsActive = true,
-                        CreatedAt = DateTime.UtcNow
-                    };
-
-                    _context.UserRoles.Add(userRole);
-                    await _context.SaveChangesAsync();
-                }
 
                 _logger.LogInformation("New user registered: {Username}", user.Username);
 
@@ -310,23 +275,14 @@ namespace HniDashOps.Infrastructure.Services
                 new("EmailConfirmed", user.EmailConfirmed.ToString())
             };
 
-            // Add role claims
-            var userRoles = _context.UserRoles
-                .Include(ur => ur.Role)
-                .Where(ur => ur.UserId == user.Id && ur.IsActive && !ur.IsDeleted)
-                .Select(ur => ur.Role.Name)
-                .ToList();
+            // Add role claim
+            claims.Add(new Claim(ClaimTypes.Role, user.RoleId.ToString()));
 
-            foreach (var role in userRoles)
+            // Add menu access claims
+            var menuIds = GetUserMenuIdsAsync(user.Id).Result;
+            foreach (var menuId in menuIds)
             {
-                claims.Add(new Claim(ClaimTypes.Role, role));
-            }
-
-            // Add permission claims
-            var permissions = GetUserPermissionsAsync(user.Id).Result;
-            foreach (var permission in permissions)
-            {
-                claims.Add(new Claim("Permission", permission.Name));
+                claims.Add(new Claim("MenuAccess", menuId.ToString()));
             }
 
             var token = new JwtSecurityToken(
@@ -403,30 +359,24 @@ namespace HniDashOps.Infrastructure.Services
             }
         }
 
-        public async Task<List<Permission>> GetUserPermissionsAsync(int userId)
+        public async Task<List<int>> GetUserMenuIdsAsync(int userId)
         {
-            return await _context.UserRoles
-                .Include(ur => ur.Role)
-                    .ThenInclude(r => r.RolePermissions)
-                        .ThenInclude(rp => rp.Permission)
-                .Where(ur => ur.UserId == userId && ur.IsActive && !ur.IsDeleted)
-                .SelectMany(ur => ur.Role.RolePermissions)
-                .Where(rp => rp.IsActive && !rp.IsDeleted)
-                .Select(rp => rp.Permission)
+            return await _context.GroupUsers
+                .Where(gu => gu.UserId == userId && gu.IsActive)
+                .SelectMany(gu => gu.Group.GroupMenus
+                    .Where(gm => gm.IsActive)
+                    .Select(gm => gm.MenuId))
                 .Distinct()
                 .ToListAsync();
         }
 
-        public async Task<bool> HasPermissionAsync(int userId, string permissionName)
+        public async Task<bool> HasMenuAccessAsync(int userId, int menuId)
         {
-            return await _context.UserRoles
-                .Include(ur => ur.Role)
-                    .ThenInclude(r => r.RolePermissions)
-                        .ThenInclude(rp => rp.Permission)
-                .Where(ur => ur.UserId == userId && ur.IsActive && !ur.IsDeleted)
-                .SelectMany(ur => ur.Role.RolePermissions)
-                .Where(rp => rp.IsActive && !rp.IsDeleted)
-                .AnyAsync(rp => rp.Permission.Name == permissionName);
+            return await _context.GroupUsers
+                .Where(gu => gu.UserId == userId && gu.IsActive)
+                .SelectMany(gu => gu.Group.GroupMenus
+                    .Where(gm => gm.IsActive && gm.MenuId == menuId))
+                .AnyAsync();
         }
 
         private static string HashPassword(string password)

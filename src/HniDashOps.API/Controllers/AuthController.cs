@@ -71,20 +71,8 @@ namespace HniDashOps.API.Controllers
                         result.User.LastLoginAt,
                         result.User.CreatedAt
                     },
-                    Roles = result.Roles.Select(r => new
-                    {
-                        r.Id,
-                        r.Name,
-                        r.Description
-                    }).ToList(),
-                    Permissions = result.Permissions.Select(p => new
-                    {
-                        p.Id,
-                        p.Name,
-                        p.Description,
-                        p.Resource,
-                        p.Action
-                    }).ToList()
+                    Role = result.Role.ToString(),
+                    MenuIds = result.MenuIds
                 });
             }
             catch (Exception ex)
@@ -213,20 +201,8 @@ namespace HniDashOps.API.Controllers
                         result.User.LastLoginAt,
                         result.User.CreatedAt
                     },
-                    Roles = result.Roles.Select(r => new
-                    {
-                        r.Id,
-                        r.Name,
-                        r.Description
-                    }).ToList(),
-                    Permissions = result.Permissions.Select(p => new
-                    {
-                        p.Id,
-                        p.Name,
-                        p.Description,
-                        p.Resource,
-                        p.Action
-                    }).ToList()
+                    Role = result.Role.ToString(),
+                    MenuIds = result.MenuIds
                 });
             }
             catch (Exception ex)

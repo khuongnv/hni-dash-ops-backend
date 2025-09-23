@@ -59,19 +59,19 @@ namespace HniDashOps.Core.Services
         Task<TokenValidationResult> ValidateTokenAsync(string token);
 
         /// <summary>
-        /// Gets user permissions by user ID
+        /// Gets user accessible menu IDs by user ID
         /// </summary>
         /// <param name="userId">User ID</param>
-        /// <returns>List of user permissions</returns>
-        Task<List<Permission>> GetUserPermissionsAsync(int userId);
+        /// <returns>List of accessible menu IDs</returns>
+        Task<List<int>> GetUserMenuIdsAsync(int userId);
 
         /// <summary>
-        /// Checks if user has a specific permission
+        /// Checks if user has access to specific menu
         /// </summary>
         /// <param name="userId">User ID</param>
-        /// <param name="permissionName">Permission name</param>
-        /// <returns>True if user has permission</returns>
-        Task<bool> HasPermissionAsync(int userId, string permissionName);
+        /// <param name="menuId">Menu ID</param>
+        /// <returns>True if user has access to menu</returns>
+        Task<bool> HasMenuAccessAsync(int userId, int menuId);
     }
 
     /// <summary>
@@ -82,8 +82,8 @@ namespace HniDashOps.Core.Services
         public bool Success { get; set; }
         public string? Token { get; set; }
         public User? User { get; set; }
-        public List<Role> Roles { get; set; } = new();
-        public List<Permission> Permissions { get; set; } = new();
+        public UserRole Role { get; set; }
+        public List<int> MenuIds { get; set; } = new();
         public string? ErrorMessage { get; set; }
     }
 

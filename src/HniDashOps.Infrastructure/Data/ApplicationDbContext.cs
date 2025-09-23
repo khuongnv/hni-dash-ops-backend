@@ -11,14 +11,17 @@ public class ApplicationDbContext : DbContext
 
     // DbSets
     public DbSet<User> Users { get; set; }
-    public DbSet<Role> Roles { get; set; }
-    public DbSet<Permission> Permissions { get; set; }
-    public DbSet<UserRole> UserRoles { get; set; }
-    public DbSet<RolePermission> RolePermissions { get; set; }
+    public DbSet<Group> Groups { get; set; }
+    public DbSet<GroupUser> GroupUsers { get; set; }
+    public DbSet<GroupMenu> GroupMenus { get; set; }
     public DbSet<Department> Departments { get; set; }
     public DbSet<Menu> Menus { get; set; }
     public DbSet<Category> Categories { get; set; }
     public DbSet<SystemNotification> SystemNotifications { get; set; }
+    
+    // Future-ready DbSets (comment out for now)
+    // public DbSet<GroupDepartment> GroupDepartments { get; set; }
+    // public DbSet<GroupCategory> GroupCategories { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -29,6 +32,7 @@ public class ApplicationDbContext : DbContext
         {
             entity.HasIndex(e => e.Username).IsUnique();
             entity.HasIndex(e => e.Email).IsUnique();
+            entity.HasIndex(e => e.RoleId);
             
             // Configure Department relationship
             entity.HasOne(u => u.Department)
@@ -37,55 +41,49 @@ public class ApplicationDbContext : DbContext
                   .OnDelete(DeleteBehavior.SetNull);
         });
 
-        // Configure Role entity
-        modelBuilder.Entity<Role>(entity =>
+        // Configure Group entity
+        modelBuilder.Entity<Group>(entity =>
         {
             entity.HasIndex(e => e.Name).IsUnique();
         });
 
-        // Configure Permission entity
-        modelBuilder.Entity<Permission>(entity =>
+        // Configure GroupUser entity (Many-to-Many)
+        modelBuilder.Entity<GroupUser>(entity =>
         {
-            entity.HasIndex(e => e.Name).IsUnique();
+            entity.HasKey(e => new { e.UserId, e.GroupId });
+            
+            entity.HasOne(gu => gu.User)
+                  .WithMany(u => u.GroupUsers)
+                  .HasForeignKey(gu => gu.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+                  
+            entity.HasOne(gu => gu.Group)
+                  .WithMany(g => g.GroupUsers)
+                  .HasForeignKey(gu => gu.GroupId)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
 
-        // Configure UserRole entity (Many-to-Many)
-        modelBuilder.Entity<UserRole>(entity =>
+        // Configure GroupMenu entity (Many-to-Many)
+        modelBuilder.Entity<GroupMenu>(entity =>
         {
-            entity.HasOne(ur => ur.User)
-                  .WithMany(u => u.UserRoles)
-                  .HasForeignKey(ur => ur.UserId)
+            entity.HasKey(e => new { e.GroupId, e.MenuId });
+            
+            entity.HasOne(gm => gm.Group)
+                  .WithMany(g => g.GroupMenus)
+                  .HasForeignKey(gm => gm.GroupId)
                   .OnDelete(DeleteBehavior.Cascade);
                   
-            entity.HasOne(ur => ur.Role)
-                  .WithMany(r => r.UserRoles)
-                  .HasForeignKey(ur => ur.RoleId)
+            entity.HasOne(gm => gm.Menu)
+                  .WithMany(m => m.GroupMenus)
+                  .HasForeignKey(gm => gm.MenuId)
                   .OnDelete(DeleteBehavior.Cascade);
-                  
-            entity.HasIndex(e => new { e.UserId, e.RoleId }).IsUnique();
-        });
-
-        // Configure RolePermission entity (Many-to-Many)
-        modelBuilder.Entity<RolePermission>(entity =>
-        {
-            entity.HasOne(rp => rp.Role)
-                  .WithMany(r => r.RolePermissions)
-                  .HasForeignKey(rp => rp.RoleId)
-                  .OnDelete(DeleteBehavior.Cascade);
-                  
-            entity.HasOne(rp => rp.Permission)
-                  .WithMany(p => p.RolePermissions)
-                  .HasForeignKey(rp => rp.PermissionId)
-                  .OnDelete(DeleteBehavior.Cascade);
-                  
-            entity.HasIndex(e => new { e.RoleId, e.PermissionId }).IsUnique();
         });
 
         // Configure Department entity
         modelBuilder.Entity<Department>(entity =>
         {
             entity.HasIndex(e => e.Code).IsUnique();
-            entity.HasIndex(e => e.MapId).IsUnique().HasFilter("\"MAPID\" IS NOT NULL");
+            entity.HasIndex(e => e.MapId).IsUnique().HasFilter("\"MAP_ID\" IS NOT NULL");
             
             // Configure self-referencing relationship (Parent-Child)
             entity.HasOne(d => d.Parent)
@@ -110,7 +108,7 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<Category>(entity =>
         {
             entity.HasIndex(e => e.Code).IsUnique();
-            entity.HasIndex(e => e.MapId).IsUnique().HasFilter("\"MAPID\" IS NOT NULL");
+            entity.HasIndex(e => e.MapId).IsUnique().HasFilter("\"MAP_ID\" IS NOT NULL");
             entity.HasIndex(e => new { e.ParentId, e.Order });
             entity.HasIndex(e => e.Type);
             

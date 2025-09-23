@@ -29,47 +29,53 @@ public partial class User : BaseEntity
     [MaxLength(255, ErrorMessage = "{0} quá dài")]
     public string Email { get; set; } = string.Empty;
 
-    [Column("PASSWORDHASH", Order = 3)]
+    [Column("PASSWORD_HASH", Order = 3)]
     [Display(Name = "Mật khẩu")]
     [Required(ErrorMessage = "{0} không được để trống")]
     [StringLength(maximumLength: 255, ErrorMessage = "{0} quá dài")]
     [MaxLength(255, ErrorMessage = "{0} quá dài")]
     public string PasswordHash { get; set; } = string.Empty;
 
-    [Column("FIRSTNAME", Order = 4)]
+    [Column("FIRST_NAME", Order = 4)]
     [Display(Name = "Tên")]
     [StringLength(maximumLength: 100, ErrorMessage = "{0} quá dài")]
     [MaxLength(100, ErrorMessage = "{0} quá dài")]
     public string? FirstName { get; set; }
 
-    [Column("LASTNAME", Order = 5)]
+    [Column("LAST_NAME", Order = 5)]
     [Display(Name = "Họ")]
     [StringLength(maximumLength: 100, ErrorMessage = "{0} quá dài")]
     [MaxLength(100, ErrorMessage = "{0} quá dài")]
     public string? LastName { get; set; }
 
-    [Column("PHONENUMBER", Order = 6)]
+    [Column("PHONE_NUMBER", Order = 6)]
     [Display(Name = "Số điện thoại")]
     [Phone(ErrorMessage = "{0} không hợp lệ")]
     [StringLength(maximumLength: 20, ErrorMessage = "{0} quá dài")]
     [MaxLength(20, ErrorMessage = "{0} quá dài")]
     public string? PhoneNumber { get; set; }
 
-    [Column("EMAILCONFIRMED", Order = 7)]
+    [Column("EMAIL_CONFIRMED", Order = 7)]
     [Display(Name = "Xác thực email")]
     public bool EmailConfirmed { get; set; } = false;
 
-    [Column("LASTLOGINAT", Order = 8)]
+    [Column("LAST_LOGIN_AT", Order = 8)]
     [Display(Name = "Lần đăng nhập cuối")]
     public DateTime? LastLoginAt { get; set; }
 
-    [Column("DEPARTMENTID", Order = 9)]
+    [Column("DEPARTMENT_ID", Order = 9)]
     [Display(Name = "Phòng ban")]
     public int? DepartmentId { get; set; }
+
+    [Column("ROLE_ID", Order = 10)]
+    [Display(Name = "Vai trò")]
+    [Required(ErrorMessage = "{0} không được để trống")]
+    public UserRole RoleId { get; set; } = UserRole.Guest;
 
     // Navigation properties
     [ForeignKey("DepartmentId")]
     public virtual Department? Department { get; set; }
 
-    public virtual ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
+    // Thay thế UserRoles collection bằng GroupUsers
+    public virtual ICollection<GroupUser> GroupUsers { get; set; } = new List<GroupUser>();
 }

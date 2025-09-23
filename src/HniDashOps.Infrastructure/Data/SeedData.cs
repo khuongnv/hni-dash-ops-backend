@@ -12,104 +12,62 @@ namespace HniDashOps.Infrastructure.Data
             // Ensure database is created
             await context.Database.EnsureCreatedAsync();
 
-            // Seed Roles
-            await SeedRolesAsync(context);
+            // Seed Groups
+            await SeedGroupsAsync(context);
 
-            // Seed Permissions
-            await SeedPermissionsAsync(context);
+            // Seed Menus
+            await SeedMenusAsync(context);
 
             // Seed Users
             await SeedUsersAsync(context);
 
-            // Seed Role-Permission relationships
-            await SeedRolePermissionsAsync(context);
+            // Seed Group-User relationships
+            await SeedGroupUsersAsync(context);
 
-            // Seed User-Role relationships
-            await SeedUserRolesAsync(context);
+            // Seed Group-Menu relationships
+            await SeedGroupMenusAsync(context);
+
+            // Seed Categories
+            await SeedCategoriesAsync(context);
+
+            // Seed Departments
+            await SeedDepartmentsAsync(context);
 
             await context.SaveChangesAsync();
         }
 
-        private static async Task SeedRolesAsync(ApplicationDbContext context)
+        private static async Task SeedGroupsAsync(ApplicationDbContext context)
         {
-            var existingRoles = await context.Roles.ToListAsync();
-            var roleNames = existingRoles.Select(r => r.Name).ToHashSet();
+            var existingGroups = await context.Groups.ToListAsync();
+            var groupNames = existingGroups.Select(g => g.Name).ToHashSet();
             
-            var rolesToCreate = new List<Role>();
+            var groupsToCreate = new List<Group>();
             
-            var roleDefinitions = new[]
+            var groupDefinitions = new[]
             {
-                new { Name = "SuperAdmin", Description = "Super Administrator with full system access" },
-                new { Name = "Admin", Description = "Administrator with management access" },
-                new { Name = "Manager", Description = "Manager with limited administrative access" },
-                new { Name = "User", Description = "Regular user with basic access" },
-                new { Name = "Guest", Description = "Guest user with read-only access" }
+                new { Name = "SuperAdmin", Description = "Super Administrator Group with full access" },
+                new { Name = "SubAdmin", Description = "Sub Administrator Group with limited admin access" },
+                new { Name = "Member", Description = "Regular Member Group with basic access" },
+                new { Name = "Guest", Description = "Guest Group with read-only access" }
             };
 
-            foreach (var roleDef in roleDefinitions)
+            foreach (var groupDef in groupDefinitions)
             {
-                if (!roleNames.Contains(roleDef.Name))
+                if (!groupNames.Contains(groupDef.Name))
                 {
-                    rolesToCreate.Add(new Role
+                    groupsToCreate.Add(new Group
                     {
-                        Name = roleDef.Name,
-                        Description = roleDef.Description,
+                        Name = groupDef.Name,
+                        Description = groupDef.Description,
                         IsActive = true,
                         CreatedAt = DateTime.UtcNow
                     });
                 }
             }
 
-            if (rolesToCreate.Any())
+            if (groupsToCreate.Any())
             {
-                await context.Roles.AddRangeAsync(rolesToCreate);
-            }
-        }
-
-        private static async Task SeedPermissionsAsync(ApplicationDbContext context)
-        {
-            var existingPermissions = await context.Permissions.ToListAsync();
-            var permissionNames = existingPermissions.Select(p => p.Name).ToHashSet();
-            
-            var permissionsToCreate = new List<Permission>();
-            
-            var permissionDefinitions = new[]
-            {
-                new { Name = "users.read", Description = "Read user information", Resource = "users", Action = "read" },
-                new { Name = "users.create", Description = "Create new users", Resource = "users", Action = "create" },
-                new { Name = "users.update", Description = "Update user information", Resource = "users", Action = "update" },
-                new { Name = "users.delete", Description = "Delete users", Resource = "users", Action = "delete" },
-                new { Name = "roles.read", Description = "Read role information", Resource = "roles", Action = "read" },
-                new { Name = "roles.create", Description = "Create new roles", Resource = "roles", Action = "create" },
-                new { Name = "roles.update", Description = "Update role information", Resource = "roles", Action = "update" },
-                new { Name = "roles.delete", Description = "Delete roles", Resource = "roles", Action = "delete" },
-                new { Name = "permissions.read", Description = "Read permission information", Resource = "permissions", Action = "read" },
-                new { Name = "permissions.create", Description = "Create new permissions", Resource = "permissions", Action = "create" },
-                new { Name = "permissions.update", Description = "Update permission information", Resource = "permissions", Action = "update" },
-                new { Name = "permissions.delete", Description = "Delete permissions", Resource = "permissions", Action = "delete" },
-                new { Name = "system.admin", Description = "Full system administration access", Resource = "system", Action = "admin" },
-                new { Name = "system.monitor", Description = "Monitor system status and logs", Resource = "system", Action = "monitor" }
-            };
-
-            foreach (var permDef in permissionDefinitions)
-            {
-                if (!permissionNames.Contains(permDef.Name))
-                {
-                    permissionsToCreate.Add(new Permission
-                    {
-                        Name = permDef.Name,
-                        Description = permDef.Description,
-                        Resource = permDef.Resource,
-                        Action = permDef.Action,
-                        IsActive = true,
-                        CreatedAt = DateTime.UtcNow
-                    });
-                }
-            }
-
-            if (permissionsToCreate.Any())
-            {
-                await context.Permissions.AddRangeAsync(permissionsToCreate);
+                await context.Groups.AddRangeAsync(groupsToCreate);
             }
         }
 
@@ -122,11 +80,10 @@ namespace HniDashOps.Infrastructure.Data
             
             var userDefinitions = new[]
             {
-                new { Username = "superadmin", Email = "superadmin@hnidashops.com", Password = "SuperAdmin@123", FirstName = "Super", LastName = "Administrator", Phone = "+84901234567", EmailConfirmed = true },
-                new { Username = "admin", Email = "admin@hnidashops.com", Password = "Admin@123", FirstName = "System", LastName = "Administrator", Phone = "+84901234568", EmailConfirmed = true },
-                new { Username = "manager1", Email = "manager1@hnidashops.com", Password = "Manager@123", FirstName = "John", LastName = "Manager", Phone = "+84901234569", EmailConfirmed = true },
-                new { Username = "user1", Email = "user1@hnidashops.com", Password = "User@123", FirstName = "Jane", LastName = "User", Phone = "+84901234570", EmailConfirmed = true },
-                new { Username = "guest1", Email = "guest1@hnidashops.com", Password = "Guest@123", FirstName = "Guest", LastName = "User", Phone = "+84901234571", EmailConfirmed = false }
+                new { Username = "superadmin", Email = "superadmin@hnidashops.com", Password = "admin@123", FirstName = "Super", LastName = "Administrator", RoleId = UserRole.SuperAdmin },
+                new { Username = "subadmin", Email = "subadmin@hnidashops.com", Password = "sub@123", FirstName = "Sub", LastName = "Administrator", RoleId = UserRole.SubAdmin },
+                new { Username = "member", Email = "member@hnidashops.com", Password = "mem@123", FirstName = "Regular", LastName = "Member", RoleId = UserRole.Member },
+                new { Username = "guest", Email = "guest@hnidashops.com", Password = "guest@123", FirstName = "Guest", LastName = "User", RoleId = UserRole.Guest }
             };
 
             foreach (var userDef in userDefinitions)
@@ -140,8 +97,8 @@ namespace HniDashOps.Infrastructure.Data
                         PasswordHash = HashPassword(userDef.Password),
                         FirstName = userDef.FirstName,
                         LastName = userDef.LastName,
-                        PhoneNumber = userDef.Phone,
-                        EmailConfirmed = userDef.EmailConfirmed,
+                        RoleId = userDef.RoleId,
+                        EmailConfirmed = true,
                         IsActive = true,
                         CreatedAt = DateTime.UtcNow
                     });
@@ -154,207 +111,208 @@ namespace HniDashOps.Infrastructure.Data
             }
         }
 
-        private static async Task SeedRolePermissionsAsync(ApplicationDbContext context)
+        private static async Task SeedMenusAsync(ApplicationDbContext context)
         {
-            // Only seed if no role permissions exist
-            if (await context.RolePermissions.AnyAsync())
+            var existingMenus = await context.Menus.ToListAsync();
+            var menuNames = existingMenus.Select(m => m.Name).ToHashSet();
+            
+            var menusToCreate = new List<Menu>();
+            
+            var menuDefinitions = new[]
             {
-                return;
-            }
+                new { Name = "Dashboard", Href = "/dashboard", Icon = "fas fa-tachometer-alt", Order = 1, ParentId = (int?)null, Level = 1, Description = "Main Dashboard" },
+                new { Name = "User Management", Href = "/users", Icon = "fas fa-users", Order = 2, ParentId = (int?)null, Level = 1, Description = "Manage Users" },
+                new { Name = "Group Management", Href = "/groups", Icon = "fas fa-layer-group", Order = 3, ParentId = (int?)null, Level = 1, Description = "Manage Groups" },
+                new { Name = "Menu Management", Href = "/menus", Icon = "fas fa-bars", Order = 4, ParentId = (int?)null, Level = 1, Description = "Manage Menus" },
+                new { Name = "Department Management", Href = "/departments", Icon = "fas fa-building", Order = 5, ParentId = (int?)null, Level = 1, Description = "Manage Departments" },
+                new { Name = "Category Management", Href = "/categories", Icon = "fas fa-tags", Order = 6, ParentId = (int?)null, Level = 1, Description = "Manage Categories" },
+                new { Name = "System Notifications", Href = "/notifications", Icon = "fas fa-bell", Order = 7, ParentId = (int?)null, Level = 1, Description = "System Notifications" },
+                new { Name = "System Settings", Href = "/settings", Icon = "fas fa-cog", Order = 8, ParentId = (int?)null, Level = 1, Description = "System Settings" }
+            };
 
-            var superAdminRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == "SuperAdmin");
-            var adminRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == "Admin");
-            var managerRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == "Manager");
-            var userRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == "User");
-            var guestRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == "Guest");
-
-            var allPermissions = await context.Permissions.ToListAsync();
-            var rolePermissions = new List<RolePermission>();
-
-            // SuperAdmin gets all permissions
-            if (superAdminRole != null)
+            foreach (var menuDef in menuDefinitions)
             {
-                foreach (var permission in allPermissions)
+                if (!menuNames.Contains(menuDef.Name))
                 {
-                    rolePermissions.Add(new RolePermission
+                    menusToCreate.Add(new Menu
                     {
-                        RoleId = superAdminRole.Id,
-                        PermissionId = permission.Id,
-                        AssignedAt = DateTime.UtcNow,
+                        Name = menuDef.Name,
+                        Href = menuDef.Href,
+                        Icon = menuDef.Icon,
+                        Order = menuDef.Order,
+                        ParentId = menuDef.ParentId,
+                        Level = menuDef.Level,
+                        Description = menuDef.Description,
+                        IsVisible = true,
                         IsActive = true,
                         CreatedAt = DateTime.UtcNow
                     });
                 }
             }
 
-            // Admin gets most permissions except system.admin
-            if (adminRole != null)
+            if (menusToCreate.Any())
             {
-                var adminPermissions = allPermissions.Where(p => p.Name != "system.admin").ToList();
-                foreach (var permission in adminPermissions)
-                {
-                    rolePermissions.Add(new RolePermission
-                    {
-                        RoleId = adminRole.Id,
-                        PermissionId = permission.Id,
-                        AssignedAt = DateTime.UtcNow,
-                        IsActive = true,
-                        CreatedAt = DateTime.UtcNow
-                    });
-                }
-            }
-
-            // Manager gets read permissions and limited write permissions
-            if (managerRole != null)
-            {
-                var managerPermissions = allPermissions.Where(p => 
-                    p.Action == "read" || 
-                    (p.Resource == "users" && p.Action == "update") ||
-                    p.Name == "system.monitor").ToList();
-                
-                foreach (var permission in managerPermissions)
-                {
-                    rolePermissions.Add(new RolePermission
-                    {
-                        RoleId = managerRole.Id,
-                        PermissionId = permission.Id,
-                        AssignedAt = DateTime.UtcNow,
-                        IsActive = true,
-                        CreatedAt = DateTime.UtcNow
-                    });
-                }
-            }
-
-            // User gets basic read permissions
-            if (userRole != null)
-            {
-                var userPermissions = allPermissions.Where(p => 
-                    p.Action == "read" && 
-                    (p.Resource == "users" || p.Resource == "roles")).ToList();
-                
-                foreach (var permission in userPermissions)
-                {
-                    rolePermissions.Add(new RolePermission
-                    {
-                        RoleId = userRole.Id,
-                        PermissionId = permission.Id,
-                        AssignedAt = DateTime.UtcNow,
-                        IsActive = true,
-                        CreatedAt = DateTime.UtcNow
-                    });
-                }
-            }
-
-            // Guest gets only read permissions for users
-            if (guestRole != null)
-            {
-                var guestPermissions = allPermissions.Where(p => 
-                    p.Name == "users.read").ToList();
-                
-                foreach (var permission in guestPermissions)
-                {
-                    rolePermissions.Add(new RolePermission
-                    {
-                        RoleId = guestRole.Id,
-                        PermissionId = permission.Id,
-                        AssignedAt = DateTime.UtcNow,
-                        IsActive = true,
-                        CreatedAt = DateTime.UtcNow
-                    });
-                }
-            }
-
-            if (rolePermissions.Any())
-            {
-                await context.RolePermissions.AddRangeAsync(rolePermissions);
+                await context.Menus.AddRangeAsync(menusToCreate);
             }
         }
 
-        private static async Task SeedUserRolesAsync(ApplicationDbContext context)
+        private static async Task SeedGroupUsersAsync(ApplicationDbContext context)
         {
-            // Only seed if no user roles exist
-            if (await context.UserRoles.AnyAsync())
+            var existingGroupUsers = await context.GroupUsers.ToListAsync();
+            if (existingGroupUsers.Any()) return; // Already seeded
+
+            var users = await context.Users.ToListAsync();
+            var groups = await context.Groups.ToListAsync();
+            
+            var groupUserMappings = new List<GroupUser>();
+
+            foreach (var user in users)
             {
-                return;
-            }
-
-            var superAdminUser = await context.Users.FirstOrDefaultAsync(u => u.Username == "superadmin");
-            var adminUser = await context.Users.FirstOrDefaultAsync(u => u.Username == "admin");
-            var managerUser = await context.Users.FirstOrDefaultAsync(u => u.Username == "manager1");
-            var regularUser = await context.Users.FirstOrDefaultAsync(u => u.Username == "user1");
-            var guestUser = await context.Users.FirstOrDefaultAsync(u => u.Username == "guest1");
-
-            var superAdminRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == "SuperAdmin");
-            var adminRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == "Admin");
-            var managerRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == "Manager");
-            var userRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == "User");
-            var guestRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == "Guest");
-
-            var userRoles = new List<UserRole>();
-
-            if (superAdminUser != null && superAdminRole != null)
-            {
-                userRoles.Add(new UserRole
+                var groupName = user.RoleId switch
                 {
-                    UserId = superAdminUser.Id,
-                    RoleId = superAdminRole.Id,
-                    AssignedAt = DateTime.UtcNow,
-                    IsActive = true,
-                    CreatedAt = DateTime.UtcNow
-                });
-            }
+                    UserRole.SuperAdmin => "SuperAdmin",
+                    UserRole.SubAdmin => "SubAdmin", 
+                    UserRole.Member => "Member",
+                    UserRole.Guest => "Guest",
+                    _ => "Guest"
+                };
 
-            if (adminUser != null && adminRole != null)
-            {
-                userRoles.Add(new UserRole
+                var group = groups.FirstOrDefault(g => g.Name == groupName);
+                if (group != null)
                 {
-                    UserId = adminUser.Id,
-                    RoleId = adminRole.Id,
-                    AssignedAt = DateTime.UtcNow,
-                    IsActive = true,
-                    CreatedAt = DateTime.UtcNow
-                });
+                    groupUserMappings.Add(new GroupUser
+                    {
+                        UserId = user.Id,
+                        GroupId = group.Id,
+                        AssignedAt = DateTime.UtcNow,
+                        IsActive = true,
+                        CreatedAt = DateTime.UtcNow
+                    });
+                }
             }
 
-            if (managerUser != null && managerRole != null)
+            if (groupUserMappings.Any())
             {
-                userRoles.Add(new UserRole
+                await context.GroupUsers.AddRangeAsync(groupUserMappings);
+            }
+        }
+
+        private static async Task SeedGroupMenusAsync(ApplicationDbContext context)
+        {
+            var existingGroupMenus = await context.GroupMenus.ToListAsync();
+            if (existingGroupMenus.Any()) return; // Already seeded
+
+            var groups = await context.Groups.ToListAsync();
+            var menus = await context.Menus.ToListAsync();
+            
+            var groupMenuMappings = new List<GroupMenu>();
+
+            foreach (var group in groups)
+            {
+                var menuIds = group.Name switch
                 {
-                    UserId = managerUser.Id,
-                    RoleId = managerRole.Id,
-                    AssignedAt = DateTime.UtcNow,
-                    IsActive = true,
-                    CreatedAt = DateTime.UtcNow
-                });
-            }
+                    "SuperAdmin" => menus.Select(m => m.Id).ToList(), // All menus
+                    "SubAdmin" => menus.Where(m => m.Name != "System Settings").Select(m => m.Id).ToList(),
+                    "Member" => menus.Where(m => new[] { "Dashboard", "System Notifications" }.Contains(m.Name)).Select(m => m.Id).ToList(),
+                    "Guest" => menus.Where(m => m.Name == "Dashboard").Select(m => m.Id).ToList(),
+                    _ => new List<int>()
+                };
 
-            if (regularUser != null && userRole != null)
-            {
-                userRoles.Add(new UserRole
+                foreach (var menuId in menuIds)
                 {
-                    UserId = regularUser.Id,
-                    RoleId = userRole.Id,
-                    AssignedAt = DateTime.UtcNow,
-                    IsActive = true,
-                    CreatedAt = DateTime.UtcNow
-                });
+                    groupMenuMappings.Add(new GroupMenu
+                    {
+                        GroupId = group.Id,
+                        MenuId = menuId,
+                        AssignedAt = DateTime.UtcNow,
+                        IsActive = true,
+                        CreatedAt = DateTime.UtcNow
+                    });
+                }
             }
 
-            if (guestUser != null && guestRole != null)
+            if (groupMenuMappings.Any())
             {
-                userRoles.Add(new UserRole
+                await context.GroupMenus.AddRangeAsync(groupMenuMappings);
+            }
+        }
+
+        private static async Task SeedCategoriesAsync(ApplicationDbContext context)
+        {
+            var existingCategories = await context.Categories.ToListAsync();
+            var categoryCodes = existingCategories.Select(c => c.Code).ToHashSet();
+            
+            var categoriesToCreate = new List<Category>();
+            
+            var categoryDefinitions = new[]
+            {
+                new { Code = "GENERAL", Name = "General", ParentId = (int?)null, Level = 1, Order = 1, Color = "#007bff", Icon = "fas fa-folder", Type = "general" },
+                new { Code = "SYSTEM", Name = "System", ParentId = (int?)null, Level = 1, Order = 2, Color = "#28a745", Icon = "fas fa-cog", Type = "system" },
+                new { Code = "USER_MGMT", Name = "User Management", ParentId = (int?)null, Level = 1, Order = 3, Color = "#ffc107", Icon = "fas fa-users", Type = "management" }
+            };
+
+            foreach (var catDef in categoryDefinitions)
+            {
+                if (!categoryCodes.Contains(catDef.Code))
                 {
-                    UserId = guestUser.Id,
-                    RoleId = guestRole.Id,
-                    AssignedAt = DateTime.UtcNow,
-                    IsActive = true,
-                    CreatedAt = DateTime.UtcNow
-                });
+                    categoriesToCreate.Add(new Category
+                    {
+                        Code = catDef.Code,
+                        Name = catDef.Name,
+                        ParentId = catDef.ParentId,
+                        Level = catDef.Level,
+                        Order = catDef.Order,
+                        Color = catDef.Color,
+                        Icon = catDef.Icon,
+                        Type = catDef.Type,
+                        IsVisible = true,
+                        IsActive = true,
+                        CreatedAt = DateTime.UtcNow
+                    });
+                }
             }
 
-            if (userRoles.Any())
+            if (categoriesToCreate.Any())
             {
-                await context.UserRoles.AddRangeAsync(userRoles);
+                await context.Categories.AddRangeAsync(categoriesToCreate);
+            }
+        }
+
+        private static async Task SeedDepartmentsAsync(ApplicationDbContext context)
+        {
+            var existingDepartments = await context.Departments.ToListAsync();
+            var departmentCodes = existingDepartments.Select(d => d.Code).ToHashSet();
+            
+            var departmentsToCreate = new List<Department>();
+            
+            var departmentDefinitions = new[]
+            {
+                new { Code = "IT", Name = "Information Technology", ParentId = (int?)null, Level = 1, MapId = "IT_DEPT" },
+                new { Code = "HR", Name = "Human Resources", ParentId = (int?)null, Level = 1, MapId = "HR_DEPT" },
+                new { Code = "FINANCE", Name = "Finance", ParentId = (int?)null, Level = 1, MapId = "FIN_DEPT" },
+                new { Code = "MARKETING", Name = "Marketing", ParentId = (int?)null, Level = 1, MapId = "MKT_DEPT" }
+            };
+
+            foreach (var deptDef in departmentDefinitions)
+            {
+                if (!departmentCodes.Contains(deptDef.Code))
+                {
+                    departmentsToCreate.Add(new Department
+                    {
+                        Code = deptDef.Code,
+                        Name = deptDef.Name,
+                        ParentId = deptDef.ParentId,
+                        Level = deptDef.Level,
+                        MapId = deptDef.MapId,
+                        IsActive = true,
+                        CreatedAt = DateTime.UtcNow
+                    });
+                }
+            }
+
+            if (departmentsToCreate.Any())
+            {
+                await context.Departments.AddRangeAsync(departmentsToCreate);
             }
         }
 

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Http;
 using HniDashOps.Core.Entities;
 using HniDashOps.Core.Services;
 using HniDashOps.Infrastructure.Data;
@@ -11,12 +12,13 @@ namespace HniDashOps.Infrastructure.Services
     /// <summary>
     /// Service implementation for Department management
     /// </summary>
-    public class DepartmentService : IDepartmentService
+    public class DepartmentService : BaseService, IDepartmentService
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<DepartmentService> _logger;
 
-        public DepartmentService(ApplicationDbContext context, ILogger<DepartmentService> logger)
+        public DepartmentService(ApplicationDbContext context, ILogger<DepartmentService> logger, IHttpContextAccessor httpContextAccessor)
+            : base(httpContextAccessor)
         {
             _context = context;
             _logger = logger;
@@ -110,9 +112,11 @@ namespace HniDashOps.Infrastructure.Services
                     MapId = mapId,
                     Level = level,
                     Note = note,
-                    IsActive = true,
-                    CreatedAt = DateTime.UtcNow
+                    IsActive = true
                 };
+
+                // Set audit fields for creation
+                SetCreatedAuditFields(department);
 
                 _context.Departments.Add(department);
                 await _context.SaveChangesAsync();
@@ -178,7 +182,9 @@ namespace HniDashOps.Infrastructure.Services
                 department.MapId = mapId;
                 department.Level = level;
                 department.Note = note;
-                department.UpdatedAt = DateTime.UtcNow;
+
+                // Set audit fields for update
+                SetUpdatedAuditFields(department);
 
                 await _context.SaveChangesAsync();
 
@@ -217,8 +223,7 @@ namespace HniDashOps.Infrastructure.Services
                 }
 
                 // Soft delete
-                department.IsDeleted = true;
-                department.UpdatedAt = DateTime.UtcNow;
+                SetDeletedAuditFields(department);
 
                 await _context.SaveChangesAsync();
 
@@ -376,8 +381,8 @@ namespace HniDashOps.Infrastructure.Services
             {
                 return await _context.Users
                     .Include(u => u.Department)
-                    .Include(u => u.UserRoles)
-                        .ThenInclude(ur => ur.Role)
+                    .Include(u => u.GroupUsers)
+                        .ThenInclude(gu => gu.Group)
                     .Where(u => u.DepartmentId == departmentId && !u.IsDeleted)
                     .OrderBy(u => u.FirstName)
                     .ThenBy(u => u.LastName)

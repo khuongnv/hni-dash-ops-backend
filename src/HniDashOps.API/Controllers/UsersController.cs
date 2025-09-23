@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using HniDashOps.Core.Services;
 using HniDashOps.Core.Entities;
+using HniDashOps.Core.Authorization;
 using HniDashOps.API.DTOs;
 using System.ComponentModel.DataAnnotations;
 
@@ -9,7 +10,7 @@ namespace HniDashOps.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize]
+[AuthorizeSuperAdmin]
 public class UsersController : ControllerBase
 {
     private readonly IUserService _userService;
@@ -22,7 +23,6 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize(Policy = "RequireUsersReadPermission")]
     public async Task<IActionResult> GetUsers()
     {
         try
@@ -41,12 +41,7 @@ public class UsersController : ControllerBase
                 EmailConfirmed = u.EmailConfirmed,
                 LastLoginAt = u.LastLoginAt,
                 CreatedAt = u.CreatedAt,
-                Roles = u.UserRoles.Select(ur => new RoleResponse
-                {
-                    Id = ur.Role.Id,
-                    Name = ur.Role.Name,
-                    Description = ur.Role.Description
-                }).ToList()
+                Role = u.RoleId.ToString()
             }).ToList();
 
             return Ok(new
@@ -69,7 +64,6 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    [Authorize(Policy = "RequireUsersReadPermission")]
     public async Task<IActionResult> GetUser(int id)
     {
         try
@@ -98,12 +92,7 @@ public class UsersController : ControllerBase
                 EmailConfirmed = user.EmailConfirmed,
                 LastLoginAt = user.LastLoginAt,
                 CreatedAt = user.CreatedAt,
-                Roles = user.UserRoles.Select(ur => new RoleResponse
-                {
-                    Id = ur.Role.Id,
-                    Name = ur.Role.Name,
-                    Description = ur.Role.Description
-                }).ToList()
+                Role = user.RoleId.ToString()
             };
 
             return Ok(new
@@ -125,7 +114,6 @@ public class UsersController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Policy = "RequireUsersCreatePermission")]
     public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest request)
     {
         try
@@ -164,7 +152,7 @@ public class UsersController : ControllerBase
                 request.FirstName,
                 request.LastName,
                 request.PhoneNumber,
-                request.RoleIds);
+                request.RoleId);
 
             _logger.LogInformation("User created: {Username} with ID: {UserId}", user.Username, user.Id);
 
@@ -188,7 +176,6 @@ public class UsersController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [Authorize(Policy = "RequireUsersUpdatePermission")]
     public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserRequest request)
     {
         try
@@ -262,7 +249,6 @@ public class UsersController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Policy = "RequireUsersDeletePermission")]
     public async Task<IActionResult> DeleteUser(int id)
     {
         try
@@ -301,7 +287,6 @@ public class UsersController : ControllerBase
     }
 
     [HttpPost("{id}/roles")]
-    [Authorize(Policy = "RequireUsersUpdatePermission")]
     public async Task<IActionResult> AssignRole(int id, [FromBody] AssignRoleRequest request)
     {
         try
@@ -311,7 +296,7 @@ public class UsersController : ControllerBase
                 return BadRequest(ModelState);
             }
 
-            var success = await _userService.AssignRoleAsync(id, request.RoleId, request.ExpiresAt);
+            var success = await _userService.UpdateUserRoleAsync(id, request.RoleId);
             
             if (!success)
             {

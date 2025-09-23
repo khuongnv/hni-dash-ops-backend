@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Http;
 using HniDashOps.Core.Entities;
 using HniDashOps.Core.Services;
 using HniDashOps.Infrastructure.Data;
@@ -9,12 +10,13 @@ namespace HniDashOps.Infrastructure.Services
     /// <summary>
     /// Service implementation for Category management
     /// </summary>
-    public class CategoryService : ICategoryService
+    public class CategoryService : BaseService, ICategoryService
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<CategoryService> _logger;
 
-        public CategoryService(ApplicationDbContext context, ILogger<CategoryService> logger)
+        public CategoryService(ApplicationDbContext context, ILogger<CategoryService> logger, IHttpContextAccessor httpContextAccessor)
+            : base(httpContextAccessor)
         {
             _context = context;
             _logger = logger;
@@ -114,9 +116,11 @@ namespace HniDashOps.Infrastructure.Services
                     IsVisible = isVisible,
                     Type = type,
                     Metadata = metadata,
-                    IsActive = true,
-                    CreatedAt = DateTime.UtcNow
+                    IsActive = true
                 };
+
+                // Set audit fields for creation
+                SetCreatedAuditFields(category);
 
                 _context.Categories.Add(category);
                 await _context.SaveChangesAsync();
@@ -188,7 +192,9 @@ namespace HniDashOps.Infrastructure.Services
                 category.IsVisible = isVisible;
                 category.Type = type;
                 category.Metadata = metadata;
-                category.UpdatedAt = DateTime.UtcNow;
+
+                // Set audit fields for update
+                SetUpdatedAuditFields(category);
 
                 await _context.SaveChangesAsync();
 
@@ -220,8 +226,7 @@ namespace HniDashOps.Infrastructure.Services
                 }
 
                 // Soft delete
-                category.IsDeleted = true;
-                category.UpdatedAt = DateTime.UtcNow;
+                SetDeletedAuditFields(category);
 
                 await _context.SaveChangesAsync();
 

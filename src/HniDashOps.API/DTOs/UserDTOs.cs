@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using HniDashOps.Core.Entities;
 
 namespace HniDashOps.API.DTOs
 {
@@ -14,7 +15,7 @@ namespace HniDashOps.API.DTOs
         public bool EmailConfirmed { get; set; }
         public DateTime? LastLoginAt { get; set; }
         public DateTime CreatedAt { get; set; }
-        public List<RoleResponse> Roles { get; set; } = new();
+        public string Role { get; set; } = string.Empty;
     }
 
     public class CreateUserRequest
@@ -31,7 +32,7 @@ namespace HniDashOps.API.DTOs
         public string? FirstName { get; set; }
         public string? LastName { get; set; }
         public string? PhoneNumber { get; set; }
-        public List<int> RoleIds { get; set; } = new();
+        public UserRole? RoleId { get; set; }
     }
 
     public class UpdateUserRequest
@@ -52,7 +53,7 @@ namespace HniDashOps.API.DTOs
     public class AssignRoleRequest
     {
         [Required]
-        public int RoleId { get; set; }
+        public UserRole RoleId { get; set; }
         public DateTime? ExpiresAt { get; set; }
     }
 }
