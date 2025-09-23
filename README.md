@@ -43,7 +43,6 @@ src/
 - **Entity Framework Core** - ORM
 - **PostgreSQL** - Database
 - **JWT Authentication** - Xác thực
-- **Docker** - Containerization
 
 ## 📝 Quy tắc đặt tên Entity và Database
 
@@ -302,7 +301,6 @@ public class ResourceAuthorizationHandler : AuthorizationHandler<ResourceAuthori
 
 - **.NET 9.0 SDK**
 - **PostgreSQL 13+**
-- **Docker** (tùy chọn)
 - **Visual Studio 2022** hoặc **VS Code**
 
 ### 🔧 Cài đặt
@@ -337,19 +335,6 @@ dotnet ef database update --project src/HniDashOps.Infrastructure --startup-proj
 ```bash
 # Chạy API để seed dữ liệu
 curl -X POST https://localhost:7001/api/seed/initialize
-```
-
-### 🐳 Chạy với Docker
-
-```bash
-# Build và chạy
-docker-compose up --build
-
-# Chỉ chạy database
-docker-compose up postgres
-
-# Chạy API
-docker-compose up api
 ```
 
 ### 🏃‍♂️ Chạy development
@@ -643,11 +628,8 @@ dotnet test --collect:"XPlat Code Coverage"
 # Build for production
 dotnet publish -c Release -o ./publish
 
-# Docker build
-docker build -t hni-dash-ops-backend .
-
-# Docker run
-docker run -p 5000:80 hni-dash-ops-backend
+# Chạy production
+dotnet ./publish/HniDashOps.API.dll
 ```
 
 ## 🤝 Contributing
